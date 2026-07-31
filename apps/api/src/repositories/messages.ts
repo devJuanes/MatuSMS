@@ -9,7 +9,7 @@ import type {
 import { getMatuDb, insertRow, nowIso, updateRow } from '../lib/matudb.js';
 import { notFound, forbidden, badRequest } from '../lib/errors.js';
 import { normalizePhoneNumber, uuid } from '../lib/utils.js';
-import { findPhoneById } from './phones.js';
+import { findPhoneById, listPhonesByUser } from './phones.js';
 
 const STALE_SENDING_MS = 90_000;
 
@@ -140,13 +140,17 @@ export async function createOutboundMessage(
   phoneNumber: string,
 ): Promise<Message> {
   const now = nowIso();
+  const owner = normalizePhoneNumber(phoneNumber);
   const contact = normalizePhoneNumber(input.to);
+  if (contact === owner) {
+    throw badRequest('Cannot send SMS to the same number as the sending SIM');
+  }
   const status = input.scheduled_send_time ? 'scheduled' : 'pending';
 
   const message = {
     id: uuid(),
     user_id: userId,
-    owner: phoneNumber,
+    owner,
     contact,
     content: input.content,
     attachments: input.attachments ?? [],
@@ -174,7 +178,7 @@ export async function createOutboundMessage(
 
   await insertRow('messages', message as Message);
 
-  await upsertThread(userId, phoneNumber, contact, message.id, input.content);
+  await upsertThread(userId, owner, contact, message.id, input.content);
   return message as Message;
 }
 
@@ -182,17 +186,47 @@ export async function createInboundMessage(
   userId: string,
   phoneNumber: string,
   input: ReceiveMessageInput,
-): Promise<Message> {
+): Promise<Message | null> {
   const now = nowIso();
+  const owner = normalizePhoneNumber(phoneNumber);
   const contact = normalizePhoneNumber(input.from);
   const receivedAt = input.received_at ?? now;
 
+  if (contact === owner) {
+    return null;
+  }
+
+  const phones = await listPhonesByUser(userId);
+  const ownedNumbers = new Set(phones.map((p) => normalizePhoneNumber(p.phone_number)));
+
   const db = getMatuDb();
+  const { data: recentOut } = await db
+    .from('messages')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('owner', owner)
+    .eq('type', 'mobile-terminated')
+    .eq('content', input.content)
+    .gte('created_at', new Date(Date.now() - 180_000).toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1);
+  const recentOutbound = (Array.isArray(recentOut) ? recentOut[0] : recentOut) as Message | undefined;
+  if (recentOutbound) {
+    const outContact = normalizePhoneNumber(recentOutbound.contact);
+    const ageMs = Date.now() - new Date(recentOutbound.created_at).getTime();
+    if (ageMs < 45_000 && outContact === contact) {
+      return null;
+    }
+    if (ageMs < 90_000 && outContact !== contact && !ownedNumbers.has(contact)) {
+      return null;
+    }
+  }
+
   const { data: recent } = await db
     .from('messages')
     .select('*')
     .eq('user_id', userId)
-    .eq('owner', phoneNumber)
+    .eq('owner', owner)
     .eq('contact', contact)
     .eq('content', input.content)
     .eq('type', 'mobile-originated')
@@ -209,7 +243,7 @@ export async function createInboundMessage(
   const message = {
     id: uuid(),
     user_id: userId,
-    owner: phoneNumber,
+    owner,
     contact,
     content: input.content,
     attachments: input.attachments ?? [],
@@ -237,7 +271,7 @@ export async function createInboundMessage(
 
   await insertRow('messages', message as Message);
 
-  await upsertThread(userId, phoneNumber, contact, message.id, input.content);
+  await upsertThread(userId, owner, contact, message.id, input.content);
   return message as Message;
 }
 

@@ -3,9 +3,10 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, Plus, Search, Send, X } from 'lucide-react';
 import { MessageStatusIcon } from '@/components/MessageStatusIcon';
+import { PhoneInput, toE164 } from '@/components/PhoneInput';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { countries, defaultCountry, formatE164, formatTime, initials, type Country } from '@/lib/countries';
+import { defaultCountry, formatTime, initials, type Country } from '@/lib/countries';
 import { encryptContent, getE2eKey, shouldEncryptByDefault } from '@/lib/e2e';
 import type { Message, MessageThread, Phone } from '@matusms/shared';
 
@@ -106,7 +107,7 @@ export function MessagingPage() {
   const newMessageMutation = useMutation({
     mutationFn: async () => {
       const token = await getToken();
-      const to = formatE164(country, newNumber);
+      const to = toE164(country, newNumber);
       const from = fromPhone || phones?.[0]?.phone_number;
       if (!from) throw new Error('No hay teléfonos vinculados');
       const key = getE2eKey();
@@ -122,7 +123,7 @@ export function MessagingPage() {
       });
     },
     onSuccess: () => {
-      const to = formatE164(country, newNumber);
+      const to = toE164(country, newNumber);
       const from = fromPhone || phones?.[0]?.phone_number || '';
       setShowNew(false);
       setNewNumber('');
@@ -331,33 +332,13 @@ export function MessagingPage() {
             )}
 
             <label className="mb-3 block text-sm">
-              <span className="mb-1 block text-slate-600">País</span>
-              <select
-                value={country.code}
-                onChange={(e) => setCountry(countries.find((c) => c.code === e.target.value) ?? defaultCountry)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5"
-              >
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.flag} {c.name} ({c.dial})
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="mb-3 block text-sm">
               <span className="mb-1 block text-slate-600">Número de teléfono</span>
-              <div className="flex gap-2">
-                <span className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-slate-600">
-                  {country.dial}
-                </span>
-                <input
-                  value={newNumber}
-                  onChange={(e) => setNewNumber(e.target.value)}
-                  placeholder="300 123 4567"
-                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-brand"
-                />
-              </div>
+              <PhoneInput
+                country={country}
+                onCountryChange={setCountry}
+                value={newNumber}
+                onChange={setNewNumber}
+              />
             </label>
 
             <label className="mb-4 block text-sm">

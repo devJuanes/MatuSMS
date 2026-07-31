@@ -5,59 +5,69 @@ import * as XLSX from 'xlsx';
 import { TEMPLATE_EXAMPLES } from '@matusms/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { resolveBulkPhone } from '@/lib/phone-input';
 import type { BulkMessage, Phone } from '@matusms/shared';
 
 type BulkRow = { to: string; content?: string; variables?: Record<string, string> };
+
+function rowToBulkEntry(row: Record<string, string>): BulkRow | null {
+  const to = resolveBulkPhone(row);
+  if (!to) return null;
+  const content = row.content || row.mensaje || row.message;
+  const variables: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    const key = k.toLowerCase().trim();
+    if (
+      !['to', 'telefono', 'phone', 'numero', 'celular', 'content', 'mensaje', 'message', 'codigo', 'codigo_pais', 'dial', 'country_code', 'pais'].includes(key) &&
+      v?.trim()
+    ) {
+      variables[key] = v.trim();
+    }
+  }
+  return {
+    to,
+    ...(content ? { content } : {}),
+    ...(Object.keys(variables).length ? { variables } : {}),
+  };
+}
 
 function parseCsv(text: string): BulkRow[] {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
   const toIdx = headers.indexOf('to');
-  const contentIdx = headers.indexOf('content');
-  if (toIdx < 0) return [];
+  const telefonoIdx = headers.indexOf('telefono');
+  const phoneIdx = headers.indexOf('phone');
+  if (toIdx < 0 && telefonoIdx < 0 && phoneIdx < 0) return [];
 
   return lines.slice(1).map((line) => {
     const cols = line.split(',');
-    const row: BulkRow = { to: cols[toIdx]?.trim() ?? '' };
-    if (contentIdx >= 0) row.content = cols.slice(contentIdx).join(',').trim();
-    const variables: Record<string, string> = {};
+    const row: Record<string, string> = {};
     headers.forEach((h, i) => {
-      if (h !== 'to' && h !== 'content' && cols[i]?.trim()) variables[h] = cols[i].trim();
+      row[h] = cols[i]?.trim() ?? '';
     });
-    if (Object.keys(variables).length) row.variables = variables;
-    return row;
-  }).filter((r) => r.to);
+    return rowToBulkEntry(row);
+  }).filter((r): r is BulkRow => r != null);
 }
 
 function parseExcel(buffer: ArrayBuffer): BulkRow[] {
   const wb = XLSX.read(buffer, { type: 'array' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '' });
-  return rows.map((row) => {
-    const normalized: Record<string, string> = {};
-    for (const [k, v] of Object.entries(row)) normalized[k.toLowerCase().trim()] = String(v).trim();
-    const to = normalized.to || normalized.telefono || normalized.phone || '';
-    const content = normalized.content || normalized.mensaje || normalized.message;
-    const variables: Record<string, string> = {};
-    for (const [k, v] of Object.entries(normalized)) {
-      if (!['to', 'telefono', 'phone', 'content', 'mensaje', 'message'].includes(k) && v) {
-        variables[k] = v;
-      }
-    }
-    return {
-      to,
-      ...(content ? { content } : {}),
-      ...(Object.keys(variables).length ? { variables } : {}),
-    };
-  }).filter((r) => r.to);
+  return rows
+    .map((row) => {
+      const normalized: Record<string, string> = {};
+      for (const [k, v] of Object.entries(row)) normalized[k.toLowerCase().trim()] = String(v).trim();
+      return rowToBulkEntry(normalized);
+    })
+    .filter((r): r is BulkRow => r != null);
 }
 
 export function BulkPage() {
   const { getToken } = useAuth();
   const [mode, setMode] = useState<'csv' | 'template'>('template');
   const [template, setTemplate] = useState<string>(TEMPLATE_EXAMPLES.verification);
-  const [csv, setCsv] = useState('to,nombre,codigo\n+573001234567,Juan,482910');
+  const [csv, setCsv] = useState('codigo_pais,telefono,nombre,codigo\n57,3001234567,Juan,482910');
   const [rows, setRows] = useState<BulkRow[]>([]);
   const [phoneId, setPhoneId] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
@@ -126,8 +136,8 @@ export function BulkPage() {
   function downloadTemplateCsv() {
     const sample =
       mode === 'template'
-        ? 'to,nombre,codigo\n+573001234567,Juan,482910\n+573009876543,Maria,119203'
-        : 'to,content\n+573001234567,Hola desde MatuSMS';
+        ? 'codigo_pais,telefono,nombre,codigo\n57,3001234567,Juan,482910\n57,3009876543,Maria,119203'
+        : 'codigo_pais,telefono,content\n57,3001234567,Hola desde MatuSMS';
     const blob = new Blob([sample], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -143,8 +153,10 @@ export function BulkPage() {
     <div className="max-w-3xl">
       <h1 className="mb-2 text-2xl font-bold text-slate-900">Envío masivo</h1>
       <p className="mb-6 text-sm text-slate-600">
-        Carga un Excel o CSV, usa plantillas con variables <code className="text-brand">{'{{nombre}}'}</code> para
-        facturas, códigos OTP y notificaciones. Límite: 3 SMS/min.
+        Carga un Excel o CSV con columnas <code className="text-brand">codigo_pais</code>,
+        <code className="text-brand">telefono</code> y variables como <code className="text-brand">nombre</code>,
+        <code className="text-brand">codigo</code>. También acepta <code className="text-brand">to</code> en E.164.
+        Límite: 3 SMS/min.
       </p>
 
       <div className="mb-4 flex gap-2">
@@ -243,8 +255,8 @@ export function BulkPage() {
       <label className="mb-4 block text-sm">
         <span className="mb-1 block text-slate-600">
           {mode === 'template'
-            ? 'Datos (columnas: to, nombre, codigo, …)'
-            : 'Datos (columnas: to, content)'}
+            ? 'Datos (columnas: codigo_pais, telefono, nombre, codigo, …)'
+            : 'Datos (columnas: codigo_pais, telefono, content)'}
         </span>
         <textarea
           value={csv}

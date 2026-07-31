@@ -169,6 +169,9 @@ export async function messageRoutes(
     const auth = requirePhoneAuth(request);
     const body = receiveMessageSchema.parse(request.body);
     const message = await createInboundMessage(auth.user.id, auth.phoneNumber, body);
+    if (!message) {
+      return { data: null, skipped: true };
+    }
     await dispatchWebhook(auth.user.id, 'message.phone.received', { message }, auth.phoneNumber);
     io?.to(auth.user.id).emit('message:received', { message });
     await incrementBillingUsage(auth.user.id, 1);
@@ -185,7 +188,7 @@ export async function messageRoutes(
       received_at: body.received_at,
     });
 
-    if (phone?.missed_call_auto_reply) {
+    if (phone?.missed_call_auto_reply && message) {
       await createOutboundMessage(
         auth.user.id,
         { to: body.from, content: phone.missed_call_auto_reply },
