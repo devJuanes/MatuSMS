@@ -47,10 +47,14 @@ export async function heartbeatRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    await dispatchWebhook(auth.user.id, 'phone.heartbeat.online', {
-      phone_id: auth.phoneId,
-      heartbeat: record,
-    });
+    try {
+      await dispatchWebhook(auth.user.id, 'phone.heartbeat.online', {
+        phone_id: auth.phoneId,
+        heartbeat: record,
+      });
+    } catch (err) {
+      request.log.warn({ err }, 'Webhook dispatch skipped for heartbeat');
+    }
 
     return { data: record };
   });
