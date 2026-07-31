@@ -4,6 +4,7 @@ import {
   messageEventSchema,
   messageStatusSchema,
   receiveMessageSchema,
+  renderTemplate,
   sendMessageSchema,
 } from '@matusms/shared';
 import {
@@ -73,6 +74,12 @@ export async function messageRoutes(
     }
 
     let sendBody = { ...body, sim: body.sim ?? phone.sim };
+    if (body.variables && Object.keys(body.variables).length > 0) {
+      sendBody = {
+        ...sendBody,
+        content: renderTemplate(body.content, body.variables),
+      };
+    }
     if (phone.message_send_schedule_id && !sendBody.scheduled_send_time) {
       const schedule = await findScheduleById(phone.message_send_schedule_id);
       if (schedule && !isWithinSchedule(schedule)) {

@@ -33,6 +33,7 @@ export async function bulkRoutes(app: FastifyInstance): Promise<void> {
       bulkId: job.id,
       userId: user.id,
       phoneId: body.phone_id,
+      template: body.template,
       messages: body.messages,
     });
 

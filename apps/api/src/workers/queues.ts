@@ -15,7 +15,8 @@ import { getMatuDb, nowIso, updateRow } from '../lib/matudb.js';
 import { findUserById } from '../repositories/users.js';
 import { updateBulkJob } from '../repositories/bulk-messages.js';
 import { incrementBillingUsage } from '../repositories/billing.js';
-import type { SendMessageInput } from '@matusms/shared';
+import type { BulkSendInput, SendMessageInput } from '@matusms/shared';
+import { renderTemplate } from '@matusms/shared';
 
 const connection = { url: env.REDIS_URL };
 
@@ -37,7 +38,8 @@ export type BulkProcessJob = {
   bulkId: string;
   userId: string;
   phoneId?: string;
-  messages: Array<{ to: string; content: string }>;
+  template?: string;
+  messages: BulkSendInput['messages'];
 };
 
 const OFFLINE_THRESHOLD_MS = 5 * 60 * 1000;
@@ -140,7 +142,7 @@ export function startWorkers(): Worker[] {
     new Worker<BulkProcessJob>(
       'bulk-process',
       async (job) => {
-        const { bulkId, userId, phoneId, messages } = job.data;
+        const { bulkId, userId, phoneId, messages, template } = job.data;
         await updateBulkJob(bulkId, { status: 'processing' });
 
         const phones = await listPhonesByUser(userId);
@@ -160,7 +162,20 @@ export function startWorkers(): Worker[] {
 
         for (const item of messages) {
           try {
-            const input: SendMessageInput = { to: item.to, content: item.content, phone_id: phone.id };
+            let content = item.content?.trim() ?? '';
+            if (template) {
+              content = renderTemplate(template, item.variables ?? {});
+            }
+            if (!content) {
+              failed++;
+              continue;
+            }
+            const input: SendMessageInput = {
+              to: item.to,
+              content,
+              phone_id: phone.id,
+              sim: phone.sim,
+            };
             const message = await createOutboundMessage(userId, input, phone.phone_number);
             await enqueueMessageSend(
               message.id,

@@ -206,14 +206,30 @@ export type UpdateScheduleInput = z.infer<typeof updateScheduleSchema>;
 
 export const bulkSendItemSchema = z.object({
   to: z.string().min(8),
-  content: z.string().min(1).max(1600),
+  content: z.string().min(1).max(1600).optional(),
+  variables: z.record(z.string()).optional(),
 });
-export const bulkSendSchema = z.object({
-  phone_id: z.string().uuid().optional(),
-  request_id: z.string().optional(),
-  filename: z.string().optional(),
-  messages: z.array(bulkSendItemSchema).min(1).max(1000),
-});
+export const bulkSendSchema = z
+  .object({
+    phone_id: z.string().uuid().optional(),
+    request_id: z.string().optional(),
+    filename: z.string().optional(),
+    /** Plantilla común con {{variables}} por fila */
+    template: z.string().min(1).max(1600).optional(),
+    messages: z.array(bulkSendItemSchema).min(1).max(1000),
+  })
+  .superRefine((data, ctx) => {
+    if (data.template) return;
+    data.messages.forEach((m, i) => {
+      if (!m.content?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'content es obligatorio si no usas template',
+          path: ['messages', i, 'content'],
+        });
+      }
+    });
+  });
 export type BulkSendInput = z.infer<typeof bulkSendSchema>;
 
 export const bulkMessageSchema = z.object({
@@ -254,6 +270,8 @@ export const sendMessageSchema = z.object({
   sim: simSchema.optional(),
   scheduled_send_time: z.string().datetime().optional(),
   attachments: z.array(z.string()).optional(),
+  /** Variables para plantillas: {{nombre}}, {{codigo}}, etc. */
+  variables: z.record(z.string()).optional(),
 });
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 

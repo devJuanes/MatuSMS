@@ -260,6 +260,17 @@ NGINX_BOOTSTRAP=1 bash deploy/scripts/setup-nginx.sh
 
 ### Paso B: Certificados SSL con Let's Encrypt
 
+**Opción rápida (recomendada):**
+
+```bash
+cd ~/apps/MatuSMS
+CERTBOT_EMAIL=tu@email.com bash deploy/scripts/setup-ssl.sh
+```
+
+Eso instala certificados para `api.sms.matubyte.com` y `matusms.matubyte.com` y activa Nginx HTTPS.
+
+**Manual:**
+
 ```bash
 sudo mkdir -p /var/www/certbot
 

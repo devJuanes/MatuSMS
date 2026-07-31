@@ -10,18 +10,19 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.1.0",
     "@matusms/shared": "workspace:*",
     "@tanstack/react-query": "^5.66.9",
     "@tanstack/react-router": "^1.105.0",
     "firebase": "^11.3.1",
     "lucide-react": "^0.475.0",
-    "@marsidev/react-turnstile": "^1.1.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",
     "socket.io-client": "^4.8.1",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
