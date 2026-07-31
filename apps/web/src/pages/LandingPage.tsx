@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import {
   ArrowRight,
-  ArrowUpRight,
   Check,
   MessageSquare,
   Radio,
