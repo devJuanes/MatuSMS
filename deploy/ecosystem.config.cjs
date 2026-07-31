@@ -25,7 +25,7 @@ module.exports = {
       time: true,
       env: {
         NODE_ENV: 'production',
-        PORT: 8000,
+        PORT: parseInt(process.env.MATUSMS_API_PORT || '8000', 10),
       },
       error_file: path.join(root, 'logs/pm2-api-error.log'),
       out_file: path.join(root, 'logs/pm2-api-out.log'),

@@ -69,6 +69,12 @@ matusms_publish_web() {
   chown -R www-data:www-data "$public_dir" 2>/dev/null || true
 }
 
+matusms_has_ssl() {
+  local domain="$1"
+  [[ -f "/etc/letsencrypt/live/$domain/fullchain.pem" ]] && \
+  [[ -f "/etc/letsencrypt/live/$domain/privkey.pem" ]]
+}
+
 matusms_install_nginx() {
   local root="$MATUSMS_ROOT"
   local port="$MATUSMS_API_PORT"
@@ -77,11 +83,19 @@ matusms_install_nginx() {
 
   echo "==> Nginx (solo api.sms + matusms.matubyte.com)"
 
-  if [[ "$NGINX_BOOTSTRAP" == "1" ]]; then
+  if [[ "$NGINX_BOOTSTRAP" == "1" ]] || ! matusms_has_ssl "api.sms.matubyte.com"; then
+    echo "    api.sms.matubyte.com → HTTP (sin certificado SSL aún)"
     cp "$root/deploy/nginx/bootstrap/api.sms.matubyte.com.http.conf" /tmp/api.sms.matubyte.com.conf
+  else
+    echo "    api.sms.matubyte.com → HTTPS"
+    cp "$root/deploy/nginx/api.sms.matubyte.com.conf" /tmp/api.sms.matubyte.com.conf
+  fi
+
+  if [[ "$NGINX_BOOTSTRAP" == "1" ]] || ! matusms_has_ssl "matusms.matubyte.com"; then
+    echo "    matusms.matubyte.com → HTTP (sin certificado SSL aún)"
     cp "$root/deploy/nginx/bootstrap/matusms.matubyte.com.http.conf" /tmp/matusms.matubyte.com.conf
   else
-    cp "$root/deploy/nginx/api.sms.matubyte.com.conf" /tmp/api.sms.matubyte.com.conf
+    echo "    matusms.matubyte.com → HTTPS"
     cp "$root/deploy/nginx/matusms.matubyte.com.conf" /tmp/matusms.matubyte.com.conf
   fi
 
@@ -95,8 +109,20 @@ matusms_install_nginx() {
   ln -sf "$web_conf" /etc/nginx/sites-enabled/matusms.matubyte.com
 
   mkdir -p /var/www/certbot
-  nginx -t
-  systemctl reload nginx
+  if nginx -t; then
+    systemctl reload nginx
+  else
+    echo "✗ nginx -t falló — no se recargó Nginx"
+    exit 1
+  fi
+
+  if ! matusms_has_ssl "api.sms.matubyte.com" || ! matusms_has_ssl "matusms.matubyte.com"; then
+    echo ""
+    echo "Obtener SSL y volver a desplegar:"
+    echo "  certbot certonly --webroot -w /var/www/certbot -d api.sms.matubyte.com"
+    echo "  certbot certonly --webroot -w /var/www/certbot -d matusms.matubyte.com"
+    echo "  bash deploy/scripts/deploy.sh"
+  fi
 }
 
 matusms_start_pm2() {
@@ -105,23 +131,21 @@ matusms_start_pm2() {
 
   echo "==> PM2 matusms-api (puerto $port)"
   export MATUSMS_ROOT="$root"
+  export MATUSMS_API_PORT="$port"
   mkdir -p "$root/logs"
 
-  local tmp_ecosystem
-  tmp_ecosystem="$(mktemp)"
-  sed "s/PORT: 8000/PORT: $port/" "$root/deploy/ecosystem.config.cjs" > "$tmp_ecosystem"
+  pm2 delete tmp 2>/dev/null || true
+  pm2 delete matusms-api 2>/dev/null || true
 
-  if pm2 describe matusms-api &>/dev/null; then
-    pm2 delete matusms-api 2>/dev/null || true
-  fi
-  pm2 start "$tmp_ecosystem"
-  rm -f "$tmp_ecosystem"
+  pm2 start "$root/deploy/ecosystem.config.cjs"
   pm2 save
 
-  sleep 2
+  sleep 3
   if curl -sf "http://127.0.0.1:$port/health" >/dev/null; then
     echo "✓ API OK en :$port/health"
   else
-    echo "⚠ API no responde en :$port — revisa: pm2 logs matusms-api"
+    echo "⚠ API no responde en :$port"
+    echo "  Revisa: pm2 logs matusms-api --lines 40"
+    pm2 logs matusms-api --lines 15 --nostream 2>/dev/null || true
   fi
 }
