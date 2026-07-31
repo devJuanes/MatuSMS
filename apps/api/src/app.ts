@@ -36,6 +36,25 @@ export async function buildApp() {
   await app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
   await app.register(helmet, { contentSecurityPolicy: false });
 
+  // Dio/Flutter often POST with Content-Type: application/json and no body.
+  app.removeContentTypeParser('application/json');
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (_request, body, done) => {
+      const raw = typeof body === 'string' ? body : body.toString('utf8');
+      if (raw === '') {
+        done(null, {});
+        return;
+      }
+      try {
+        done(null, JSON.parse(raw));
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    },
+  );
+
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof AppError) {
       return reply.status(error.statusCode).send({

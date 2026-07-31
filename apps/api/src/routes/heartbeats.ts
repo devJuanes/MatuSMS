@@ -23,28 +23,32 @@ export async function heartbeatRoutes(app: FastifyInstance): Promise<void> {
 
     await insertRow('heartbeats', record);
 
-    const { data: existing } = await db
-      .from('heartbeat_monitors')
-      .select('*')
-      .eq('phone_id', auth.phoneId)
-      .single();
+    try {
+      const { data: existing } = await db
+        .from('heartbeat_monitors')
+        .select('*')
+        .eq('phone_id', auth.phoneId)
+        .maybeSingle();
 
-    if (existing) {
-      await updateRow('heartbeat_monitors', { phone_id: auth.phoneId }, {
-        last_seen_at: now,
-        status: 'online',
-        updated_at: now,
-      });
-    } else {
-      await insertRow('heartbeat_monitors', {
-        id: uuid(),
-        phone_id: auth.phoneId,
-        user_id: auth.user.id,
-        last_seen_at: now,
-        status: 'online',
-        created_at: now,
-        updated_at: now,
-      });
+      if (existing) {
+        await updateRow('heartbeat_monitors', { phone_id: auth.phoneId }, {
+          last_seen_at: now,
+          status: 'online',
+          updated_at: now,
+        });
+      } else {
+        await insertRow('heartbeat_monitors', {
+          id: uuid(),
+          phone_id: auth.phoneId,
+          user_id: auth.user.id,
+          last_seen_at: now,
+          status: 'online',
+          created_at: now,
+          updated_at: now,
+        });
+      }
+    } catch (err) {
+      request.log.warn({ err }, 'Heartbeat monitor upsert failed');
     }
 
     try {
