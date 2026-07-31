@@ -5,14 +5,16 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTurnstile } from '@/hooks/useTurnstile';
 
-export function LoginPage() {
-  const { loginEmail, loginGoogle } = useAuth();
+export function RegisterPage() {
+  const { registerEmail, loginGoogle } = useAuth();
   const navigate = useNavigate();
-  const { redirect } = useSearch({ from: '/login' });
+  const { redirect } = useSearch({ from: '/register' });
   const { siteKey, turnstileToken, setTurnstileToken, verifyTurnstile, requiresTurnstile } = useTurnstile();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,20 +26,30 @@ export function LoginPage() {
     navigate({ to: '/mensajes', search: { owner: undefined, contact: undefined, nuevo: undefined } });
   }
 
-  async function handleEmail(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    setLoading(true);
     try {
       const ok = await verifyTurnstile();
       if (!ok) {
         setError('Completa la verificación de seguridad');
         return;
       }
-      await loginEmail(email, password);
+      await registerEmail(email, password, name || undefined);
       await afterAuth();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      setError(err instanceof Error ? err.message : 'Error al crear la cuenta');
     } finally {
       setLoading(false);
     }
@@ -60,18 +72,29 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Bienvenido de nuevo"
-      subtitle="Inicia sesión para acceder al panel MatuSMS"
+      title="Crea tu cuenta"
+      subtitle="Empieza a usar MatuSMS en minutos"
       footer={
         <p className="text-center text-sm text-slate-500">
-          ¿No tienes cuenta?{' '}
-          <Link to="/register" search={{ redirect: undefined }} className="font-semibold text-brand hover:underline">
-            Regístrate gratis
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" search={{ redirect: undefined }} className="font-semibold text-brand hover:underline">
+            Inicia sesión
           </Link>
         </p>
       }
     >
-      <form onSubmit={handleEmail} className="space-y-4">
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">Nombre (opcional)</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="auth-input"
+            placeholder="Tu nombre"
+            autoComplete="name"
+          />
+        </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-slate-600">Correo electrónico</label>
           <input
@@ -91,9 +114,21 @@ export function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="auth-input"
-            placeholder="••••••••"
+            placeholder="Mínimo 8 caracteres"
             required
-            autoComplete="current-password"
+            autoComplete="new-password"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-slate-600">Confirmar contraseña</label>
+          <input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className="auth-input"
+            placeholder="Repite tu contraseña"
+            required
+            autoComplete="new-password"
           />
         </div>
 
@@ -115,7 +150,7 @@ export function LoginPage() {
           disabled={loading || (requiresTurnstile && !turnstileToken)}
           className="auth-btn-primary"
         >
-          {loading ? 'Entrando…' : 'Iniciar sesión'}
+          {loading ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
       </form>
 
@@ -126,12 +161,13 @@ export function LoginPage() {
       </div>
 
       <button type="button" onClick={handleGoogle} className="auth-btn-secondary">
-        Continuar con Google
+        Registrarse con Google
       </button>
 
       <p className="mt-6 text-center text-xs text-slate-400">
+        Al registrarte aceptas los{' '}
         <Link to="/legal" className="text-brand hover:underline">
-          Términos y privacidad
+          términos y privacidad
         </Link>
       </p>
     </AuthShell>

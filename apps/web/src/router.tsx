@@ -5,10 +5,14 @@ import {
   Navigate,
   Outlet,
   redirect,
+  useLocation,
 } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useAuth } from '@/contexts/AuthContext';
+import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { MessagingPage } from '@/pages/MessagingPage';
 import { PhonesPage } from '@/pages/PhonesPage';
 import { SettingsPage } from '@/pages/SettingsPage';
@@ -19,17 +23,22 @@ import { BulkPage } from '@/pages/BulkPage';
 import { HeartbeatsPage } from '@/pages/HeartbeatsPage';
 import { BillingPage } from '@/pages/BillingPage';
 import { SearchPage } from '@/pages/SearchPage';
+import type { ReactNode } from 'react';
 
 function AuthGuard() {
   const { user, loading } = useAuth();
-  if (loading) {
+  const location = useLocation();
+
+  if (loading) return <LoadingScreen />;
+  if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface text-slate-500">
-        Cargando…
-      </div>
+      <Navigate
+        to="/login"
+        search={{ redirect: location.pathname + location.searchStr || undefined }}
+      />
     );
   }
-  if (!user) return <Navigate to="/login" />;
+
   return (
     <DashboardLayout>
       <Outlet />
@@ -37,12 +46,52 @@ function AuthGuard() {
   );
 }
 
+function GuestGuard({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (user) {
+    return (
+      <Navigate
+        to="/mensajes"
+        search={{ owner: undefined, contact: undefined, nuevo: undefined }}
+      />
+    );
+  }
+  return children;
+}
+
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
+
+const landingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: LandingPage,
+});
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: LoginPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: (search.redirect as string) || undefined,
+  }),
+  component: () => (
+    <GuestGuard>
+      <LoginPage />
+    </GuestGuard>
+  ),
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: (search.redirect as string) || undefined,
+  }),
+  component: () => (
+    <GuestGuard>
+      <RegisterPage />
+    </GuestGuard>
+  ),
 });
 
 const legalRoute = createRoute({
@@ -55,14 +104,6 @@ const protectedLayout = createRoute({
   getParentRoute: () => rootRoute,
   id: 'protected',
   component: AuthGuard,
-});
-
-const indexRoute = createRoute({
-  getParentRoute: () => protectedLayout,
-  path: '/',
-  beforeLoad: () => {
-    throw redirect({ to: '/mensajes', search: { owner: undefined, contact: undefined, nuevo: undefined } });
-  },
 });
 
 const messagingRoute = createRoute({
@@ -143,11 +184,21 @@ const searchRoute = createRoute({
   component: SearchPage,
 });
 
+const catchAllRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/$',
+  beforeLoad: () => {
+    throw redirect({ to: '/' });
+  },
+});
+
 const routeTree = rootRoute.addChildren([
+  landingRoute,
   loginRoute,
+  registerRoute,
   legalRoute,
+  catchAllRoute,
   protectedLayout.addChildren([
-    indexRoute,
     messagingRoute,
     threadsRedirect,
     threadDetailRedirect,

@@ -6,10 +6,12 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   type User,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
@@ -18,6 +20,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   loginEmail: (email: string, password: string) => Promise<void>;
+  registerEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
@@ -41,6 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     loginEmail: async (email, password) => {
       await signInWithEmailAndPassword(auth, email, password);
+    },
+    registerEmail: async (email, password, displayName) => {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName?.trim()) {
+        await updateProfile(cred.user, { displayName: displayName.trim() });
+      }
     },
     loginGoogle: async () => {
       await signInWithPopup(auth, googleProvider);

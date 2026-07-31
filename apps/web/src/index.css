@@ -1,15 +1,73 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #2563eb;
-  --color-brand-dark: #1d4ed8;
-  --color-brand-light: #dbeafe;
+  --color-brand: #3b6ff5;
+  --color-brand-dark: #2b5ce6;
+  --color-brand-light: #e8f0ff;
+  --color-peach: #fde8d8;
+  --color-peach-soft: #fff4ed;
+  --color-sky: #dceeff;
   --color-surface: #f8fafc;
   --color-chat-in: #ffffff;
-  --color-chat-out: #2563eb;
+  --color-chat-out: #3b6ff5;
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
 body {
   @apply bg-surface text-slate-900 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Fondo landing — azul arriba-derecha, melocotón abajo-izquierda */
+.marketing-bg {
+  background-color: #f6f8fc;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 85% 5%, rgba(147, 197, 253, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 10% 95%, rgba(253, 186, 140, 0.45) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 40%, rgba(255, 255, 255, 0.9) 0%, transparent 70%),
+    linear-gradient(160deg, #eef4ff 0%, #fafbfd 45%, #fff8f3 100%);
+}
+
+.marketing-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.marketing-card {
+  @apply rounded-[1.75rem] border border-white/80 bg-white/75 shadow-[0_20px_60px_-20px_rgba(59,111,245,0.15)] backdrop-blur-sm;
+}
+
+.marketing-card-dashed {
+  @apply rounded-[1.75rem] border border-dashed border-slate-200/90 bg-white/60 backdrop-blur-sm;
+}
+
+.marketing-hero-box {
+  @apply rounded-[2rem] border border-dashed border-slate-200/80 bg-white/50 px-6 py-12 backdrop-blur-md sm:px-10 sm:py-16;
+  box-shadow: 0 32px 80px -24px rgba(59, 111, 245, 0.12);
+}
+
+.marketing-float {
+  animation: marketing-float 6s ease-in-out infinite;
+}
+
+.marketing-float-delay {
+  animation: marketing-float 6s ease-in-out 2s infinite;
+}
+
+@keyframes marketing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.auth-input {
+  @apply w-full rounded-2xl border border-slate-200/90 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20;
+}
+
+.auth-btn-primary {
+  @apply w-full rounded-full bg-brand py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.auth-btn-secondary {
+  @apply w-full rounded-full border border-slate-200/80 bg-white/80 py-3.5 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-white;
 }
