@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { useState } from 'react';
+import { MessageStatusIcon } from '@/components/MessageStatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { encryptContent, getE2eKey, shouldEncryptByDefault } from '@/lib/e2e';
@@ -48,24 +49,27 @@ export function ThreadDetailPage() {
   return (
     <div className="flex h-[calc(100vh-3rem)] flex-col">
       <h1 className="mb-4 text-xl font-bold">
-        {contact} <span className="text-sm font-normal text-zinc-500">via {owner}</span>
+        {contact} <span className="text-sm font-normal text-zinc-500">vía {owner}</span>
       </h1>
 
       <div className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        {isLoading && <p className="text-zinc-400">Loading…</p>}
-        {messages?.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-              m.type === 'mobile-terminated'
-                ? 'ml-auto bg-brand text-white'
-                : 'bg-zinc-800 text-zinc-100'
-            }`}
-          >
-            <p>{m.content}</p>
-            <p className="mt-1 text-xs opacity-60">{m.status}</p>
-          </div>
-        ))}
+        {isLoading && <p className="text-zinc-400">Cargando…</p>}
+        {messages?.map((m) => {
+          const outbound = m.type === 'mobile-terminated';
+          return (
+            <div
+              key={m.id}
+              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                outbound ? 'ml-auto bg-brand text-white' : 'bg-zinc-800 text-zinc-100'
+              }`}
+            >
+              <p>{m.content}</p>
+              <p className={`mt-1 flex items-center gap-1 text-xs ${outbound ? 'justify-end text-blue-100' : 'text-zinc-400'}`}>
+                {outbound && <MessageStatusIcon status={m.status} outbound />}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <form
@@ -78,7 +82,7 @@ export function ThreadDetailPage() {
         <input
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Type a message…"
+          placeholder="Escribe un mensaje…"
           className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm outline-none focus:border-brand"
         />
         <button
@@ -86,7 +90,7 @@ export function ThreadDetailPage() {
           disabled={sendMutation.isPending}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
         >
-          Send
+          {sendMutation.isPending ? 'Enviando…' : 'Enviar'}
         </button>
       </form>
     </div>

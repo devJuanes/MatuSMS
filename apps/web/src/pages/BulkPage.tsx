@@ -51,9 +51,9 @@ export function BulkPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold">Bulk SMS</h1>
+      <h1 className="mb-2 text-2xl font-bold">Envío masivo</h1>
       <p className="mb-6 text-sm text-zinc-400">
-        Upload CSV with columns <code className="text-brand">to,content</code>. Rate limited to 3/min.
+        Sube un CSV con columnas <code className="text-brand">to,content</code>. Límite: 3 por minuto.
       </p>
 
       <div className="mb-4">
@@ -83,17 +83,17 @@ export function BulkPage() {
         disabled={sendMutation.isPending}
         className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
       >
-        {sendMutation.isPending ? 'Sending…' : 'Send bulk (202 async)'}
+        {sendMutation.isPending ? 'Enviando…' : 'Enviar lote'}
       </button>
 
-      <h2 className="mb-3 mt-10 text-lg font-semibold">Recent jobs</h2>
-      {isLoading && <p className="text-zinc-400">Loading…</p>}
+      <h2 className="mb-3 mt-10 text-lg font-semibold">Trabajos recientes</h2>
+      {isLoading && <p className="text-zinc-400">Cargando…</p>}
       <div className="space-y-2">
         {jobs?.map((j) => (
           <div key={j.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-sm">
-            <span className="font-medium">{j.status}</span> — {j.success_count}/{j.total_count} sent
+            <span className="font-medium">{j.status}</span> — {j.success_count}/{j.total_count} enviados
             {j.failed_count > 0 && (
-              <span className="text-red-400"> ({j.failed_count} failed)</span>
+              <span className="text-red-400"> ({j.failed_count} con error)</span>
             )}
           </div>
         ))}

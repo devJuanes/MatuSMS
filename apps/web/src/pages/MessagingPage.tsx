@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, Plus, Search, Send, X } from 'lucide-react';
+import { MessageStatusIcon } from '@/components/MessageStatusIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { countries, defaultCountry, formatE164, formatTime, initials, type Country } from '@/lib/countries';
@@ -262,8 +263,9 @@ export function MessagingPage() {
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{m.content}</p>
-                      <p className={`mt-1 text-[10px] ${outbound ? 'text-blue-100' : 'text-slate-400'}`}>
-                        {formatTime(m.order_timestamp)} · {m.status}
+                      <p className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${outbound ? 'text-blue-100' : 'text-slate-400'}`}>
+                        <span>{formatTime(m.order_timestamp)}</span>
+                        {outbound && <MessageStatusIcon status={m.status} outbound />}
                       </p>
                     </div>
                   </div>

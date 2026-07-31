@@ -43,7 +43,7 @@ export async function getOutstandingMessages(phoneId: string, userId: string): P
     .select('*')
     .eq('user_id', userId)
     .eq('owner', phone.phone_number)
-    .in('status', ['pending', 'sending'])
+    .eq('status', 'pending')
     .eq('can_be_polled', true)
     .order('order_timestamp', { ascending: true })
     .limit(20);
@@ -205,6 +205,17 @@ export async function applyMessageEvent(
   if (message.user_id !== userId) throw forbidden();
 
   const now = nowIso();
+
+  if (event.event === 'FAILED' && (message.status === 'sent' || message.status === 'delivered')) {
+    return message;
+  }
+  if (event.event === 'DELIVERED' && message.status === 'delivered') {
+    return message;
+  }
+  if (event.event === 'SENT' && (message.status === 'sent' || message.status === 'delivered')) {
+    return message;
+  }
+
   const updates: Record<string, unknown> = {
     updated_at: now,
     last_attempted_at: now,
@@ -214,17 +225,20 @@ export async function applyMessageEvent(
   switch (event.event) {
     case 'SENT':
       updates.status = 'sent';
-      updates.sent_at = now;
+      updates.sent_at = message.sent_at ?? now;
+      updates.can_be_polled = false;
       if (event.send_duration !== undefined) updates.send_duration = event.send_duration;
       break;
     case 'DELIVERED':
       updates.status = 'delivered';
       updates.delivered_at = now;
+      updates.can_be_polled = false;
       break;
     case 'FAILED':
       if (message.send_attempt_count + 1 >= message.max_send_attempts) {
         updates.status = 'failed';
         updates.failed_at = now;
+        updates.can_be_polled = false;
       } else {
         updates.status = 'pending';
         updates.can_be_polled = true;
