@@ -77,6 +77,10 @@ export async function updatePhoneFcmToken(
   return updated;
 }
 
+export async function clearPhoneFcmToken(id: string): Promise<void> {
+  await updateRow('phones', { id }, { fcm_token: null, updated_at: nowIso() });
+}
+
 export async function findPhoneByUserAndSim(userId: string, sim: Sim): Promise<Phone | null> {
   const db = getMatuDb();
   const { data, error } = await db

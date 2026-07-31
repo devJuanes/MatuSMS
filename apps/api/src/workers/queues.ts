@@ -1,14 +1,13 @@
 import { Queue, Worker, type Job } from 'bullmq';
 import { env } from '../config.js';
 import { sendFcmDataMessage } from '../lib/firebase.js';
-import { findPhoneById, listPhonesByUser } from '../repositories/phones.js';
+import { findPhoneById, listPhonesByUser, clearPhoneFcmToken } from '../repositories/phones.js';
 import {
   activateScheduledMessage,
   createOutboundMessage,
   expireMessage,
   findMessageById,
   getDueScheduledMessages,
-  markMessageSending,
 } from '../repositories/messages.js';
 import { signWebhookPayload } from '../lib/utils.js';
 import { getMatuDb, nowIso, updateRow } from '../lib/matudb.js';
@@ -17,6 +16,7 @@ import { updateBulkJob } from '../repositories/bulk-messages.js';
 import { incrementBillingUsage } from '../repositories/billing.js';
 import type { BulkSendInput, SendMessageInput } from '@matusms/shared';
 import { renderTemplate } from '@matusms/shared';
+import { msgLog } from '../lib/message-logger.js';
 
 const connection = { url: env.REDIS_URL };
 
@@ -54,16 +54,36 @@ export function startWorkers(): Worker[] {
         const { messageId, phoneId } = job.data;
         const phone = await findPhoneById(phoneId);
         if (!phone?.fcm_token) {
-          console.warn(`[MatuSMS] No FCM token for phone ${phoneId}`);
+          msgLog.warn(
+            { messageId, phoneId, sim: phone?.sim, phoneNumber: phone?.phone_number },
+            'FCM push skipped — no token on phone (app must register FCM; poll fallback active)',
+          );
           return;
         }
-        await markMessageSending(messageId);
-        await sendFcmDataMessage(phone.fcm_token, {
-          type: 'new_message',
-          message_id: messageId,
-          sim: phone.sim,
-          owner: phone.phone_number,
-        });
+        try {
+          await sendFcmDataMessage(phone.fcm_token, {
+            type: 'new_message',
+            message_id: messageId,
+            sim: phone.sim,
+            owner: phone.phone_number,
+          });
+          msgLog.info(
+            { messageId, phoneId, sim: phone.sim },
+            'FCM push sent for new message',
+          );
+        } catch (err) {
+          const code = (err as { code?: string }).code;
+          if (
+            code === 'messaging/registration-token-not-registered' ||
+            code === 'messaging/invalid-registration-token'
+          ) {
+            await clearPhoneFcmToken(phoneId);
+            msgLog.warn({ phoneId, messageId, code }, 'FCM token invalid — cleared from phone');
+          } else {
+            msgLog.error({ err, messageId, phoneId }, 'FCM push failed');
+          }
+          throw err;
+        }
       },
       { connection },
     ),
@@ -274,6 +294,7 @@ export async function enqueueMessageSend(
     { messageId },
     { delay: expirationSeconds * 1000 },
   );
+  msgLog.info({ messageId, phoneId, userId, expirationSeconds }, 'Message enqueued for delivery');
 }
 
 export async function dispatchWebhook(

@@ -28,6 +28,7 @@ import { listPhonesByUser, findPhoneById } from '../repositories/phones.js';
 import { findScheduleById } from '../repositories/schedules.js';
 import { isWithinSchedule, nextScheduleOpenTime } from '../lib/schedule.js';
 import { badRequest, notFound } from '../lib/errors.js';
+import { msgLog } from '../lib/message-logger.js';
 import { enqueueMessageSend, dispatchWebhook } from '../workers/queues.js';
 import { incrementBillingUsage } from '../repositories/billing.js';
 import type { Server as SocketServer } from 'socket.io';
@@ -132,10 +133,15 @@ export async function messageRoutes(
     const { id } = idParams.parse(request.params);
     const claimed = await claimMessageForSending(id, auth.user.id, auth.phoneNumber);
     if (!claimed) {
+      msgLog.warn(
+        { messageId: id, phoneId: auth.phoneId, phoneNumber: auth.phoneNumber },
+        'Message claim rejected (already sending or not pending)',
+      );
       return reply.status(409).send({
         error: { message: 'Message not available for sending', code: 'CONFLICT' },
       });
     }
+    msgLog.info({ messageId: id, phoneId: auth.phoneId }, 'Message claimed for sending');
     return { data: { claimed: true } };
   });
 
@@ -144,6 +150,15 @@ export async function messageRoutes(
     const { id } = idParams.parse(request.params);
     const body = messageEventSchema.parse(request.body);
     const message = await applyMessageEvent(id, auth.user.id, body);
+    msgLog.info(
+      {
+        messageId: id,
+        event: body.event,
+        status: message.status,
+        sendAttemptCount: message.send_attempt_count,
+      },
+      'Message event applied',
+    );
     const webhookEvent = eventMap[body.event];
     await dispatchWebhook(auth.user.id, webhookEvent, { message }, auth.phoneNumber);
     io?.to(auth.user.id).emit('message:updated', { message });

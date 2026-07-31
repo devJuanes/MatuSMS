@@ -11,6 +11,8 @@ import { notFound, forbidden, badRequest } from '../lib/errors.js';
 import { normalizePhoneNumber, uuid } from '../lib/utils.js';
 import { findPhoneById } from './phones.js';
 
+const STALE_SENDING_MS = 90_000;
+
 export async function findMessageById(id: string): Promise<Message | null> {
   const db = getMatuDb();
   const { data, error } = await db.from('messages').select('*').eq('id', id).single();
@@ -38,7 +40,7 @@ export async function getOutstandingMessages(phoneId: string, userId: string): P
   const phone = await findPhoneById(phoneId);
   if (!phone || phone.user_id !== userId) throw forbidden();
 
-  const { data, error } = await db
+  const { data: pending, error: pendingErr } = await db
     .from('messages')
     .select('*')
     .eq('user_id', userId)
@@ -47,8 +49,31 @@ export async function getOutstandingMessages(phoneId: string, userId: string): P
     .eq('can_be_polled', true)
     .order('order_timestamp', { ascending: true })
     .limit(20);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Message[];
+  if (pendingErr) throw new Error(pendingErr.message);
+
+  const staleCutoff = Date.now() - STALE_SENDING_MS;
+  const { data: sending, error: sendingErr } = await db
+    .from('messages')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('owner', phone.phone_number)
+    .eq('status', 'sending')
+    .order('order_timestamp', { ascending: true })
+    .limit(20);
+  if (sendingErr) throw new Error(sendingErr.message);
+
+  const stale = ((sending ?? []) as Message[]).filter((m) => {
+    const last = m.last_attempted_at ? new Date(m.last_attempted_at).getTime() : 0;
+    return last > 0 && last < staleCutoff;
+  });
+
+  const byId = new Map<string, Message>();
+  for (const row of [...(pending ?? []), ...stale] as Message[]) {
+    byId.set(row.id, row);
+  }
+  return [...byId.values()].sort(
+    (a, b) => new Date(a.order_timestamp).getTime() - new Date(b.order_timestamp).getTime(),
+  );
 }
 
 async function upsertThread(
@@ -225,15 +250,44 @@ export async function claimMessageForSending(
   if (!message) return false;
   if (message.user_id !== userId) return false;
   if (message.owner !== phoneNumber) return false;
-  if (message.status !== 'pending' || !message.can_be_polled) return false;
 
-  await updateRow('messages', { id: messageId }, {
-    status: 'sending',
-    can_be_polled: false,
-    updated_at: nowIso(),
-    last_attempted_at: nowIso(),
-  });
-  return true;
+  const now = nowIso();
+  const lastAttemptMs = message.last_attempted_at
+    ? new Date(message.last_attempted_at).getTime()
+    : 0;
+  const staleSending =
+    message.status === 'sending' && Date.now() - lastAttemptMs > STALE_SENDING_MS;
+
+  if (message.status === 'pending' && message.can_be_polled) {
+    const updated = await updateRow<Message>('messages', {
+      id: messageId,
+      status: 'pending',
+      can_be_polled: true,
+      owner: phoneNumber,
+    }, {
+      status: 'sending',
+      can_be_polled: false,
+      updated_at: now,
+      last_attempted_at: now,
+    });
+    return updated != null;
+  }
+
+  if (staleSending) {
+    const updated = await updateRow<Message>('messages', {
+      id: messageId,
+      status: 'sending',
+      owner: phoneNumber,
+    }, {
+      status: 'sending',
+      can_be_polled: false,
+      updated_at: now,
+      last_attempted_at: now,
+    });
+    return updated != null;
+  }
+
+  return false;
 }
 
 export async function applyMessageEvent(

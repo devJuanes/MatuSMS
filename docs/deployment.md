@@ -48,6 +48,7 @@ chmod +x deploy/scripts/*.sh
 cd apps
 cp ../deploy/env/api.production.env.example api/.env
 cp ../deploy/env/web.production.env.example web/.env
+# Ver docs/firebase-android.md — sin FCM los SMS del dashboard tardan y aparece "Sin FCM"
 nano api/.env   # MatuDB, Redis, etc.
 # Subir: scp service-account.json root@IP:~/apps/MatuSMS/apps/api/
 

@@ -23,6 +23,9 @@ export function PhonesPage() {
       <h1 className="mb-2 text-2xl font-bold text-slate-900">Teléfonos vinculados</h1>
       <p className="mb-6 text-slate-500">
         Los teléfonos se registran desde la app Android con tu API Key. Aquí ves el estado de cada SIM.
+        Si aparece <strong>Sin FCM</strong>, configura Firebase en la app Android (ver{' '}
+        <code className="rounded bg-slate-100 px-1">docs/firebase-android.md</code>) para envío instantáneo
+        desde el dashboard.
       </p>
 
       {isLoading && <p className="text-slate-500">Cargando…</p>}

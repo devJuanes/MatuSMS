@@ -64,6 +64,7 @@ export async function phoneRoutes(app: FastifyInstance): Promise<void> {
     const auth = requirePhoneAuth(request);
     const { fcm_token } = fcmBody.parse(request.body);
     const phone = await updatePhoneFcmToken(auth.phoneId, auth.user.id, fcm_token);
+    request.log.info({ phoneId: auth.phoneId, sim: phone.sim }, 'FCM token registered');
     return { data: phone };
   });
 
