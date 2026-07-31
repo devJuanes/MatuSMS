@@ -1,8 +1,14 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve, isAbsolute } from 'node:path';
 import admin from 'firebase-admin';
 import { env } from '../config.js';
 
 let initialized = false;
+
+function resolveServiceAccountPath(configuredPath: string): string {
+  if (isAbsolute(configuredPath)) return configuredPath;
+  return resolve(process.cwd(), configuredPath);
+}
 
 export function initFirebase(): void {
   if (initialized) return;
@@ -11,7 +17,14 @@ export function initFirebase(): void {
     const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   } else if (env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-    const raw = readFileSync(env.FIREBASE_SERVICE_ACCOUNT_PATH, 'utf-8');
+    const path = resolveServiceAccountPath(env.FIREBASE_SERVICE_ACCOUNT_PATH);
+    if (!existsSync(path)) {
+      throw new Error(
+        `Firebase service account not found at ${path}. ` +
+          'Set FIREBASE_SERVICE_ACCOUNT_PATH in apps/api/.env or use FIREBASE_SERVICE_ACCOUNT_JSON.',
+      );
+    }
+    const raw = readFileSync(path, 'utf-8');
     const serviceAccount = JSON.parse(raw);
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   } else if (env.NODE_ENV === 'development') {

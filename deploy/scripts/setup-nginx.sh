@@ -1,32 +1,11 @@
 #!/usr/bin/env bash
-# Instala los sitios Nginx de MatuSMS (requiere sudo)
+# Solo instala/actualiza Nginx de MatuSMS desde el repo (sin build ni PM2)
 set -euo pipefail
 
-ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
-BOOTSTRAP="${NGINX_BOOTSTRAP:-0}"
+export MATUSMS_ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=common.sh
+source "$SCRIPT_DIR/common.sh"
 
-echo "==> Instalando configuración Nginx"
-
-if [[ "$BOOTSTRAP" == "1" ]]; then
-  echo "    Modo bootstrap (solo HTTP, para certbot)"
-  sudo cp "$ROOT/deploy/nginx/bootstrap/api.sms.matubyte.com.http.conf" \
-    /etc/nginx/sites-available/api.sms.matubyte.com
-  sudo cp "$ROOT/deploy/nginx/bootstrap/matusms.matubyte.com.http.conf" \
-    /etc/nginx/sites-available/matusms.matubyte.com
-else
-  echo "    Modo producción (HTTP + HTTPS)"
-  sudo cp "$ROOT/deploy/nginx/api.sms.matubyte.com.conf" \
-    /etc/nginx/sites-available/api.sms.matubyte.com
-  sudo cp "$ROOT/deploy/nginx/matusms.matubyte.com.conf" \
-    /etc/nginx/sites-available/matusms.matubyte.com
-fi
-
-sudo ln -sf /etc/nginx/sites-available/api.sms.matubyte.com /etc/nginx/sites-enabled/
-sudo ln -sf /etc/nginx/sites-available/matusms.matubyte.com /etc/nginx/sites-enabled/
-
-sudo mkdir -p /var/www/certbot
-sudo nginx -t
-sudo systemctl enable nginx
-sudo systemctl reload nginx
-
-echo "✓ Nginx configurado."
+matusms_install_nginx
+echo "✓ Nginx MatuSMS actualizado desde deploy/nginx/"

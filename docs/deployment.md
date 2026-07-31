@@ -5,33 +5,54 @@ Guía para levantar MatuSMS en un servidor Linux (Ubuntu 22.04/24.04) con **PM2*
 | Servicio | Subdominio | Puerto interno |
 |----------|------------|----------------|
 | **API** (Fastify + Socket.IO) | `https://api.sms.matubyte.com` | `8000` (solo localhost) |
-| **Dashboard** (React/Vite estático) | `https://matusms.matubyte.com` | Nginx sirve `apps/web/dist` |
+| **Dashboard** (React/Vite estático) | `https://matusms.matubyte.com` | Nginx sirve `/var/www/matusms-web` |
 
-> **Tu servidor:** si el prompt es `root@servidor:~/apps/MatuSMS#`, ya estás en la raíz correcta.  
-> Equivalente: `/root/apps/MatuSMS` = `~/apps/MatuSMS`
+> **Tu servidor:** `~/apps/MatuSMS` (= `/root/apps/MatuSMS`)
 
-### Siguiente paso (desde donde estás)
+## Despliegue con un solo comando (recomendado)
+
+**No edites Nginx a mano.** Todo está en el repo en `deploy/nginx/`.  
+Sube los cambios a GitHub y en el servidor:
 
 ```bash
-# Ya en ~/apps/MatuSMS — instalar dependencias del servidor (solo la primera vez)
-chmod +x deploy/scripts/*.sh
-bash deploy/scripts/install-server.sh
+cd ~/apps/MatuSMS
+git pull origin main
+bash deploy/scripts/deploy.sh
+```
 
-# Configurar .env de las apps
+Ese script hace automáticamente:
+
+1. `pnpm install` + `pnpm build:prod`
+2. Corrige `apps/api/.env` (Firebase, CORS, `API_PUBLIC_URL`)
+3. Publica el frontend en `/var/www/matusms-web` (Nginx no lee `/root/`)
+4. Copia `deploy/nginx/*.conf` → `/etc/nginx/sites-available/`
+5. Reinicia solo PM2 `matusms-api` y recarga Nginx
+
+### Qué archivos controlan cada cosa (en GitHub)
+
+| Qué | Archivo en el repo |
+|-----|-------------------|
+| Frontend `matusms.matubyte.com` | `deploy/nginx/matusms.matubyte.com.conf` → `root /var/www/matusms-web` |
+| API `api.sms.matubyte.com` | `deploy/nginx/api.sms.matubyte.com.conf` → proxy `:8000` |
+| Variables API producción | `deploy/env/api.production.env.example` |
+| Variables web producción | `deploy/env/web.production.env.example` |
+| Script completo | `deploy/scripts/deploy.sh` |
+
+### Primera vez (antes del deploy)
+
+```bash
+cd ~/apps/MatuSMS
+chmod +x deploy/scripts/*.sh
+
+# .env + Firebase (obligatorio)
 cd apps
 cp ../deploy/env/api.production.env.example api/.env
 cp ../deploy/env/web.production.env.example web/.env
-nano api/.env
-nano web/.env
+nano api/.env   # MatuDB, Redis, etc.
+# Subir: scp service-account.json root@IP:~/apps/MatuSMS/apps/api/
 
-# Build y PM2 (volver a la raíz del repo)
 cd ~/apps/MatuSMS
-pnpm install --frozen-lockfile
-pnpm build:prod
-mkdir -p logs
-export MATUSMS_ROOT=~/apps/MatuSMS
-pm2 start deploy/ecosystem.config.cjs
-pm2 save
+bash deploy/scripts/deploy.sh
 ```
 
 ## Estructura en el servidor
@@ -47,7 +68,7 @@ Las aplicaciones viven dentro de la carpeta **`apps/`**. El monorepo se clona en
 │   │   └── service-account.json
 │   └── web/                   ← Dashboard (Vite) — .env y build
 │       ├── .env
-│       └── dist/              ← Nginx sirve esta carpeta
+│       └── dist/              ← build local; Nginx sirve /var/www/matusms-web
 ├── packages/shared/
 ├── deploy/                    ← PM2, Nginx, scripts
 └── logs/                      ← logs de PM2

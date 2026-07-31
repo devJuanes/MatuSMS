@@ -35,7 +35,7 @@ if command -v ss &>/dev/null; then
   if ss -tlnp | grep -q ":$PORT "; then
     echo "⚠ Puerto $PORT en uso:"
     ss -tlnp | grep ":$PORT " || true
-    echo "  Sugerencia: MATuSMS_API_PORT=8010 bash deploy/scripts/safe-setup.sh"
+    echo "  Sugerencia: MATUSMS_API_PORT=8010 bash deploy/scripts/deploy.sh"
   else
     echo "✓ Puerto $PORT libre"
   fi
@@ -58,13 +58,19 @@ fi
 
 echo ""
 echo "--- Archivos MatuSMS ---"
-for f in apps/api/.env apps/web/.env apps/api/dist/index.js apps/web/dist/index.html; do
+for f in apps/api/.env apps/web/.env apps/api/service-account.json apps/api/dist/index.js apps/web/dist/index.html; do
   if [[ -f "$ROOT/$f" ]]; then
     echo "✓ $f"
   else
     echo "✗ falta $f"
   fi
 done
+
+if [[ -f /var/www/matusms-web/index.html ]]; then
+  echo "✓ /var/www/matusms-web/index.html (nginx)"
+else
+  echo "✗ falta /var/www/matusms-web — ejecuta: bash deploy/scripts/deploy.sh"
+fi
 
 echo ""
 echo "=== Fin preflight ==="

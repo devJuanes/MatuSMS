@@ -1,48 +1,43 @@
 #!/usr/bin/env bash
-# Despliegue / actualización de MatuSMS en producción
+# Despliegue completo MatuSMS — git pull + build + nginx + pm2
+# Uso en el servidor:
+#   cd ~/apps/MatuSMS && bash deploy/scripts/deploy.sh
 set -euo pipefail
 
 ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
 BRANCH="${MATUSMS_BRANCH:-main}"
+export MATUSMS_ROOT="$ROOT"
 
-echo "==> MatuSMS deploy — $ROOT (rama: $BRANCH)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=common.sh
+source "$SCRIPT_DIR/common.sh"
+
+echo "=== MatuSMS deploy ==="
+echo "ROOT=$ROOT  PORT=$MATUSMS_API_PORT  WEB=$MATUSMS_WEB_PUBLIC_DIR"
+echo ""
 
 cd "$ROOT"
 
 if [[ -d .git ]]; then
-  echo "==> git pull"
+  echo "==> git pull ($BRANCH)"
   git fetch origin
   git checkout "$BRANCH"
   git pull origin "$BRANCH"
-else
-  echo "ERROR: $ROOT no es un repositorio git. Clona primero:"
-  echo "  git clone <tu-repo> $ROOT"
-  exit 1
 fi
 
 echo "==> pnpm install"
 pnpm install --frozen-lockfile
 
-echo "==> build (shared + api + web)"
+echo "==> pnpm build:prod"
 pnpm build:prod
 
-echo "==> PM2 — API"
-export MATUSMS_ROOT="$ROOT"
-mkdir -p "$ROOT/logs"
-
-if pm2 describe matusms-api &>/dev/null; then
-  pm2 reload "$ROOT/deploy/ecosystem.config.cjs" --update-env
-else
-  pm2 start "$ROOT/deploy/ecosystem.config.cjs"
-  pm2 save
-fi
-
-echo "==> Nginx — validar y recargar"
-sudo nginx -t
-sudo systemctl reload nginx
+matusms_fix_env
+matusms_publish_web
+matusms_start_pm2
+matusms_install_nginx
 
 echo ""
-echo "✓ Despliegue completado."
-echo "  API:  https://api.sms.matubyte.com/health"
+echo "✓ Despliegue completado"
 echo "  Web:  https://matusms.matubyte.com"
+echo "  API:  https://api.sms.matubyte.com/health"
 echo "  Docs: https://api.sms.matubyte.com/docs"
