@@ -156,7 +156,7 @@ export function BulkPage() {
         Carga un Excel o CSV con columnas <code className="text-brand">codigo_pais</code>,
         <code className="text-brand">telefono</code> y variables como <code className="text-brand">nombre</code>,
         <code className="text-brand">codigo</code>. También acepta <code className="text-brand">to</code> en E.164.
-        Límite: 3 SMS/min.
+        Límite cola: 12 SMS/min en servidor; el teléfono envía según su SIM.
       </p>
 
       <div className="mb-4 flex gap-2">

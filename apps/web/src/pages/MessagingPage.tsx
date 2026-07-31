@@ -180,9 +180,9 @@ export function MessagingPage() {
   );
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen flex-col md:flex-row">
       {/* Lista de conversaciones */}
-      <section className="flex w-full max-w-md flex-col border-r border-slate-200 bg-white">
+      <section className="flex w-full md:max-w-md flex-col border-r border-slate-200 bg-white md:h-screen">
         <header className="border-b border-slate-100 px-5 py-4">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-brand">Mensajes</h1>
@@ -245,7 +245,7 @@ export function MessagingPage() {
       </section>
 
       {/* Panel de chat */}
-      <section className="flex flex-1 flex-col bg-surface">
+      <section className="hidden md:flex flex-1 flex-col bg-surface min-h-0">
         {!owner || !contact ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-slate-500">
             <MessageCircle size={64} className="text-brand/30" />

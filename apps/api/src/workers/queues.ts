@@ -216,7 +216,7 @@ export function startWorkers(): Worker[] {
           failed_count: failed,
         });
       },
-      { connection, limiter: { max: 3, duration: 60_000 } },
+      { connection, limiter: { max: 12, duration: 60_000 } },
     ),
   );
 
