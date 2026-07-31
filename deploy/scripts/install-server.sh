@@ -36,9 +36,9 @@ if ! command -v redis-server &>/dev/null; then
 fi
 
 # Carpetas
-mkdir -p /var/www/matusms/logs
+MATUSMS_ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
+mkdir -p "$MATUSMS_ROOT/logs"
 mkdir -p /var/www/certbot
-chown -R "${SUDO_USER:-$USER}:${SUDO_USER:-$USER}" /var/www/matusms
 
 # Nginx — quitar sitio default si existe
 rm -f /etc/nginx/sites-enabled/default
@@ -49,4 +49,4 @@ echo "  Node: $(node -v)"
 echo "  pnpm: $(pnpm -v)"
 echo "  PM2:  $(pm2 -v)"
 echo ""
-echo "Siguiente paso: clonar el repo en /var/www/matusms y seguir docs/deployment.md"
+echo "Siguiente paso: clonar el repo en $MATUSMS_ROOT y seguir docs/deployment.md"

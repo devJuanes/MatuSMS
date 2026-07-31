@@ -2,7 +2,7 @@
 # Instala los sitios Nginx de MatuSMS (requiere sudo)
 set -euo pipefail
 
-ROOT="${MATUSMS_ROOT:-/var/www/matusms}"
+ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
 BOOTSTRAP="${NGINX_BOOTSTRAP:-0}"
 
 echo "==> Instalando configuración Nginx"

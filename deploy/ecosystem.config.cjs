@@ -2,13 +2,13 @@
  * PM2 — MatuSMS API (producción)
  *
  * Uso en el servidor:
- *   export MATUSMS_ROOT=/var/www/matusms
+ *   export MATUSMS_ROOT=/root/apps/MatuSMS
  *   pm2 start deploy/ecosystem.config.cjs
  *   pm2 save
  */
 const path = require('node:path');
 
-const root = process.env.MATUSMS_ROOT || '/var/www/matusms';
+const root = process.env.MATUSMS_ROOT || '/root/apps/MatuSMS';
 const apiDir = path.join(root, 'apps/api');
 
 module.exports = {

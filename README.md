@@ -157,6 +157,8 @@ Subdominios de producción:
 
 Guía completa (PM2, Nginx, SSL, certbot): **[docs/deployment.md](docs/deployment.md)**
 
+En el servidor: raíz del repo en `~/apps/MatuSMS` (`/root/apps/MatuSMS`); apps en `apps/api` y `apps/web`.
+
 Archivos en `deploy/`:
 
 - `ecosystem.config.cjs` — PM2 para la API

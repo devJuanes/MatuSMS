@@ -2,7 +2,7 @@
 # Despliegue / actualización de MatuSMS en producción
 set -euo pipefail
 
-ROOT="${MATUSMS_ROOT:-/var/www/matusms}"
+ROOT="${MATUSMS_ROOT:-/root/apps/MatuSMS}"
 BRANCH="${MATUSMS_BRANCH:-main}"
 
 echo "==> MatuSMS deploy — $ROOT (rama: $BRANCH)"
