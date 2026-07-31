@@ -10,6 +10,20 @@ import { defaultCountry, formatTime, initials, type Country } from '@/lib/countr
 import { encryptContent, getE2eKey, shouldEncryptByDefault } from '@/lib/e2e';
 import type { Message, MessageThread, Phone } from '@matusms/shared';
 
+function digitsOnly(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+function findPhoneByNumber(phones: Phone[] | undefined, number: string): Phone | undefined {
+  if (!phones?.length || !number) return undefined;
+  const target = digitsOnly(number);
+  return phones.find((p) => digitsOnly(p.phone_number) === target);
+}
+
+function isSelfSend(fromNumber: string, toNumber: string): boolean {
+  return digitsOnly(fromNumber) === digitsOnly(toNumber);
+}
+
 export function MessagingPage() {
   const { user, getToken } = useAuth();
   const qc = useQueryClient();
@@ -23,6 +37,7 @@ export function MessagingPage() {
   const [country, setCountry] = useState<Country>(defaultCountry);
   const [fromPhone, setFromPhone] = useState('');
   const [replyFrom, setReplyFrom] = useState('');
+  const [sendError, setSendError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const owner = search.owner;
@@ -76,14 +91,19 @@ export function MessagingPage() {
   }, [messages]);
 
   const sendMutation = useMutation({
-    mutationFn: async (payload: { to: string; content: string; from: string }) => {
+    mutationFn: async (payload: { to: string; content: string; phoneId: string }) => {
       const token = await getToken();
       const key = getE2eKey();
       const useEncryption = shouldEncryptByDefault() && !!key;
       const body =
         useEncryption && key
-          ? { ...payload, content: encryptContent(payload.content, key), encrypted: true }
-          : payload;
+          ? {
+              to: payload.to,
+              content: encryptContent(payload.content, key),
+              phone_id: payload.phoneId,
+              encrypted: true,
+            }
+          : { to: payload.to, content: payload.content, phone_id: payload.phoneId };
       return apiFetch('/v1/messages/send', {
         method: 'POST',
         token: token!,
@@ -91,16 +111,21 @@ export function MessagingPage() {
       });
     },
     onSuccess: (_data, variables) => {
+      setSendError('');
       setComposer('');
-      if (variables.from !== owner) {
+      const fromPhone = findPhoneByNumber(phones, replyFrom)?.phone_number ?? owner ?? '';
+      if (fromPhone !== owner) {
         navigate({
           to: '/mensajes',
-          search: { owner: variables.from, contact: variables.to, nuevo: undefined },
+          search: { owner: fromPhone, contact: variables.to, nuevo: undefined },
         });
       }
       qc.invalidateQueries({ queryKey: ['thread', owner, contact] });
-      qc.invalidateQueries({ queryKey: ['thread', variables.from, variables.to] });
+      qc.invalidateQueries({ queryKey: ['thread', fromPhone, variables.to] });
       qc.invalidateQueries({ queryKey: ['threads'] });
+    },
+    onError: (err) => {
+      setSendError(err instanceof Error ? err.message : 'No se pudo enviar el mensaje');
     },
   });
 
@@ -108,14 +133,22 @@ export function MessagingPage() {
     mutationFn: async () => {
       const token = await getToken();
       const to = toE164(country, newNumber);
-      const from = fromPhone || phones?.[0]?.phone_number;
-      if (!from) throw new Error('No hay teléfonos vinculados');
+      const phone = findPhoneByNumber(phones, fromPhone) ?? phones?.[0];
+      if (!phone) throw new Error('No hay teléfonos vinculados');
+      if (isSelfSend(phone.phone_number, to)) {
+        throw new Error('No puedes enviar un SMS al mismo número de la SIM emisora');
+      }
       const key = getE2eKey();
       const useEncryption = shouldEncryptByDefault() && !!key;
       const body =
         useEncryption && key
-          ? { to, content: encryptContent(newMessage, key), from, encrypted: true }
-          : { to, content: newMessage, from };
+          ? {
+              to,
+              content: encryptContent(newMessage, key),
+              phone_id: phone.id,
+              encrypted: true,
+            }
+          : { to, content: newMessage, phone_id: phone.id };
       return apiFetch('/v1/messages/send', {
         method: 'POST',
         token: token!,
@@ -125,6 +158,7 @@ export function MessagingPage() {
     onSuccess: () => {
       const to = toE164(country, newNumber);
       const from = fromPhone || phones?.[0]?.phone_number || '';
+      setSendError('');
       setShowNew(false);
       setNewNumber('');
       setNewMessage('');
@@ -133,6 +167,9 @@ export function MessagingPage() {
         search: { owner: from, contact: to, nuevo: undefined },
       });
       qc.invalidateQueries({ queryKey: ['threads'] });
+    },
+    onError: (err) => {
+      setSendError(err instanceof Error ? err.message : 'No se pudo enviar el mensaje');
     },
   });
 
@@ -275,14 +312,23 @@ export function MessagingPage() {
               <div ref={bottomRef} />
             </div>
 
+            {sendError && (
+              <div className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">
+                {sendError}
+              </div>
+            )}
+
             <form
               className="flex gap-2 border-t border-slate-200 bg-white p-4"
               onSubmit={(e) => {
                 e.preventDefault();
-                const from = replyFrom || owner;
-                if (composer.trim() && from) {
-                  sendMutation.mutate({ to: contact, content: composer, from });
+                const phone = findPhoneByNumber(phones, replyFrom || owner || '');
+                if (!composer.trim() || !contact || !phone) return;
+                if (isSelfSend(phone.phone_number, contact)) {
+                  setSendError('No puedes enviar un SMS al mismo número de la SIM emisora');
+                  return;
                 }
+                sendMutation.mutate({ to: contact, content: composer, phoneId: phone.id });
               }}
             >
               <input
@@ -351,6 +397,10 @@ export function MessagingPage() {
                 className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 outline-none focus:border-brand"
               />
             </label>
+
+            {sendError && showNew && (
+              <p className="mb-3 text-sm text-red-600">{sendError}</p>
+            )}
 
             <button
               type="button"

@@ -143,7 +143,9 @@ export async function createOutboundMessage(
   const owner = normalizePhoneNumber(phoneNumber);
   const contact = normalizePhoneNumber(input.to);
   if (contact === owner) {
-    throw badRequest('Cannot send SMS to the same number as the sending SIM');
+    throw badRequest(
+      'No puedes enviar un SMS al mismo número de la SIM emisora. Elige otro destino o otra SIM.',
+    );
   }
   const status = input.scheduled_send_time ? 'scheduled' : 'pending';
 

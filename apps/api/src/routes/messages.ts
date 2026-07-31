@@ -31,6 +31,7 @@ import { badRequest, notFound } from '../lib/errors.js';
 import { msgLog } from '../lib/message-logger.js';
 import { enqueueMessageSend, dispatchWebhook } from '../workers/queues.js';
 import { incrementBillingUsage } from '../repositories/billing.js';
+import { normalizePhoneNumber } from '../lib/utils.js';
 import type { Server as SocketServer } from 'socket.io';
 
 const idParams = z.object({ id: z.string().uuid() });
@@ -68,7 +69,8 @@ export async function messageRoutes(
       if (!found) throw badRequest('Phone not found');
       phone = found;
     } else if (body.from) {
-      const found = phones.find((p) => p.phone_number === body.from);
+      const fromNorm = normalizePhoneNumber(body.from);
+      const found = phones.find((p) => normalizePhoneNumber(p.phone_number) === fromNorm);
       if (found) phone = found;
     } else if (user.active_phone_id) {
       const found = phones.find((p) => p.id === user.active_phone_id);

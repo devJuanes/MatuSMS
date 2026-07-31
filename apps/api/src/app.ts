@@ -8,6 +8,7 @@ import { AppError } from './lib/errors.js';
 import { initFirebase } from './lib/firebase.js';
 import { connectRedis, isRedisCompatibleWithBullMq } from './lib/redis.js';
 import { startWorkers } from './workers/queues.js';
+import { ZodError } from 'zod';
 import { healthRoutes } from './routes/health.js';
 import { userRoutes } from './routes/users.js';
 import { phoneRoutes } from './routes/phones.js';
@@ -56,6 +57,12 @@ export async function buildApp() {
   );
 
   app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof ZodError) {
+      const message = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+      return reply.status(400).send({
+        error: { message, code: 'VALIDATION_ERROR' },
+      });
+    }
     if (error instanceof AppError) {
       return reply.status(error.statusCode).send({
         error: { message: error.message, code: error.code },
