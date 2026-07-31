@@ -321,12 +321,75 @@ export const updateUserSchema = z.object({
 });
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
+export const verificationPurposeSchema = z.enum([
+  'login',
+  'register',
+  'password_reset',
+  'transaction',
+  'custom',
+]);
+export type VerificationPurpose = z.infer<typeof verificationPurposeSchema>;
+
+export const verificationLocaleSchema = z.enum(['es', 'en']);
+export type VerificationLocale = z.infer<typeof verificationLocaleSchema>;
+
+export const verificationStatusSchema = z.enum(['pending', 'verified', 'expired', 'failed']);
+export type VerificationStatus = z.infer<typeof verificationStatusSchema>;
+
+export const createVerificationSchema = z.object({
+  to: z.string().min(8),
+  purpose: verificationPurposeSchema,
+  locale: verificationLocaleSchema.default('es'),
+  phone_id: z.string().uuid().optional(),
+  from: z.string().optional(),
+  /** Plantilla personalizada con {{codigo}} y {{minutos}}. */
+  template: z.string().min(1).max(1600).optional(),
+  code_length: z.number().int().min(4).max(8).optional(),
+  expires_in_seconds: z.number().int().min(60).max(3600).optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+export type CreateVerificationInput = z.infer<typeof createVerificationSchema>;
+
+export const verifyCodeSchema = z.object({
+  to: z.string().min(8),
+  purpose: verificationPurposeSchema,
+  code: z.string().min(4).max(8),
+});
+export type VerifyCodeInput = z.infer<typeof verifyCodeSchema>;
+
+export const verificationSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string(),
+  to: z.string(),
+  purpose: verificationPurposeSchema,
+  status: verificationStatusSchema,
+  locale: verificationLocaleSchema,
+  message_id: z.string().uuid().nullable().optional(),
+  expires_at: z.string(),
+  verified_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  metadata: z.record(z.unknown()).optional(),
+});
+export type Verification = z.infer<typeof verificationSchema>;
+
+export const verifyCodeResultSchema = z.object({
+  verified: z.boolean(),
+  verification_id: z.string().uuid(),
+  purpose: verificationPurposeSchema,
+  to: z.string(),
+});
+export type VerifyCodeResult = z.infer<typeof verifyCodeResultSchema>;
+
 export const webhookEventTypes = [
   'message.phone.sent',
   'message.phone.delivered',
   'message.phone.failed',
   'message.phone.received',
   'message.send.expired',
+  'verification.sent',
+  'verification.verified',
+  'verification.failed',
+  'verification.expired',
   'phone.heartbeat.offline',
   'phone.heartbeat.online',
   'phone.updated',

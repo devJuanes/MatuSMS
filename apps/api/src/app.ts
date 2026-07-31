@@ -13,6 +13,7 @@ import { healthRoutes } from './routes/health.js';
 import { userRoutes } from './routes/users.js';
 import { phoneRoutes } from './routes/phones.js';
 import { messageRoutes } from './routes/messages.js';
+import { verificationRoutes } from './routes/verifications.js';
 import { phoneApiKeyRoutes } from './routes/phone-api-keys.js';
 import { heartbeatRoutes } from './routes/heartbeats.js';
 import { webhookRoutes } from './routes/webhooks.js';
@@ -96,6 +97,7 @@ export async function buildApp() {
   await attachmentRoutes(app);
   await authRoutes(app);
   await messageRoutes(app, io);
+  await verificationRoutes(app, io);
 
   app.get('/openapi.json', async () => openApiDocument);
 

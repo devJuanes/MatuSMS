@@ -87,6 +87,16 @@ OpenAPI UI: http://localhost:8000/docs
 
 Health check: http://localhost:8000/health
 
+**Guía SaaS (OTP, login, registro, reset):** [docs/api-saas-messaging.md](docs/api-saas-messaging.md)
+
+### Verifications (OTP SaaS)
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /v1/verifications` | Genera código, envía SMS (202) — `purpose`: login, register, password_reset, transaction, custom |
+| `POST /v1/verifications/verify` | Valida código ingresado por el usuario |
+| `GET /v1/verifications/:id` | Estado de la verificación |
+
 ### Operations (Phase 6)
 
 | Endpoint | Description |

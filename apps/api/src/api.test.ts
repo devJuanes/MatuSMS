@@ -37,9 +37,20 @@ describe('MatuSMS API health', () => {
     expect(body.openapi).toBe('3.1.0');
   });
 
-  it('GET /v1/webhooks/events is public', async () => {
-    const res = await app.inject({ method: 'GET', url: '/v1/webhooks/events' });
+  it('GET /openapi.json includes verification paths', async () => {
+    const res = await app.inject({ method: 'GET', url: '/openapi.json' });
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.json().data)).toBe(true);
+    const body = res.json();
+    expect(body.paths['/v1/verifications']).toBeDefined();
+    expect(body.paths['/v1/verifications/verify']).toBeDefined();
+  });
+
+  it('POST /v1/verifications/verify requires auth', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/v1/verifications/verify',
+      payload: { to: '+573001234567', purpose: 'login', code: '123456' },
+    });
+    expect(res.statusCode).toBe(401);
   });
 });
