@@ -62,10 +62,10 @@ export function BulkPage() {
           onChange={(e) => setPhoneId(e.target.value)}
           className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm"
         >
-          <option value="">Default phone</option>
+          <option value="">Teléfono por defecto</option>
           {phones?.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.phone_number}
+              {p.sim} — {p.phone_number}
             </option>
           ))}
         </select>

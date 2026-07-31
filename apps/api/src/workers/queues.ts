@@ -59,6 +59,8 @@ export function startWorkers(): Worker[] {
         await sendFcmDataMessage(phone.fcm_token, {
           type: 'new_message',
           message_id: messageId,
+          sim: phone.sim,
+          owner: phone.phone_number,
         });
       },
       { connection },

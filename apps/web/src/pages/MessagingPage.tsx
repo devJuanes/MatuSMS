@@ -20,6 +20,7 @@ export function MessagingPage() {
   const [newMessage, setNewMessage] = useState('');
   const [country, setCountry] = useState<Country>(defaultCountry);
   const [fromPhone, setFromPhone] = useState('');
+  const [replyFrom, setReplyFrom] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const owner = search.owner;
@@ -49,6 +50,10 @@ export function MessagingPage() {
   useEffect(() => {
     if (phones?.length && !fromPhone) setFromPhone(phones[0].phone_number);
   }, [phones, fromPhone]);
+
+  useEffect(() => {
+    if (owner) setReplyFrom(owner);
+  }, [owner]);
 
   const { data: messages, isLoading: loadingMessages } = useQuery({
     queryKey: ['thread', owner, contact],
@@ -83,9 +88,16 @@ export function MessagingPage() {
         body: JSON.stringify(body),
       });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       setComposer('');
+      if (variables.from !== owner) {
+        navigate({
+          to: '/mensajes',
+          search: { owner: variables.from, contact: variables.to, nuevo: undefined },
+        });
+      }
       qc.invalidateQueries({ queryKey: ['thread', owner, contact] });
+      qc.invalidateQueries({ queryKey: ['thread', variables.from, variables.to] });
       qc.invalidateQueries({ queryKey: ['threads'] });
     },
   });
@@ -213,9 +225,26 @@ export function MessagingPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">
                 {initials(contact)}
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold">{contact}</p>
-                <p className="text-xs text-slate-500">vía {owner}</p>
+                {phones && phones.length > 1 ? (
+                  <label className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                    <span>Enviar desde</span>
+                    <select
+                      value={replyFrom}
+                      onChange={(e) => setReplyFrom(e.target.value)}
+                      className="max-w-[200px] truncate rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700"
+                    >
+                      {phones.map((p) => (
+                        <option key={p.id} value={p.phone_number}>
+                          {p.sim} — {p.phone_number}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <p className="text-xs text-slate-500">vía {owner}</p>
+                )}
               </div>
             </header>
 
@@ -247,8 +276,9 @@ export function MessagingPage() {
               className="flex gap-2 border-t border-slate-200 bg-white p-4"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (composer.trim() && owner) {
-                  sendMutation.mutate({ to: contact, content: composer, from: owner });
+                const from = replyFrom || owner;
+                if (composer.trim() && from) {
+                  sendMutation.mutate({ to: contact, content: composer, from });
                 }
               }}
             >

@@ -72,7 +72,7 @@ export async function messageRoutes(
       if (found) phone = found;
     }
 
-    let sendBody = { ...body };
+    let sendBody = { ...body, sim: body.sim ?? phone.sim };
     if (phone.message_send_schedule_id && !sendBody.scheduled_send_time) {
       const schedule = await findScheduleById(phone.message_send_schedule_id);
       if (schedule && !isWithinSchedule(schedule)) {
