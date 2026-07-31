@@ -5,6 +5,7 @@ import {
   createVerificationSchema,
   verifyCodeSchema,
   VERIFICATION_DEFAULTS,
+  type SendMessageInput,
 } from '@matusms/shared';
 import type { Server as SocketServer } from 'socket.io';
 import { authenticateUser, requireUser } from '../middleware/auth.js';
@@ -73,7 +74,7 @@ export async function verificationRoutes(
       expiresInSeconds: expiresIn,
     });
 
-    let sendInput = {
+    let sendInput: SendMessageInput = {
       to,
       content,
       sim: phone.sim,
