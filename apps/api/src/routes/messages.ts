@@ -15,6 +15,7 @@ import {
 } from '../middleware/auth.js';
 import {
   applyMessageEvent,
+  claimMessageForSending,
   createInboundMessage,
   createOutboundMessage,
   findMessageById,
@@ -124,6 +125,18 @@ export async function messageRoutes(
     const auth = requirePhoneAuth(request);
     const messages = await getOutstandingMessages(auth.phoneId, auth.user.id);
     return { data: messages };
+  });
+
+  app.post('/v1/messages/:id/claim', { preHandler: authenticatePhone }, async (request, reply) => {
+    const auth = requirePhoneAuth(request);
+    const { id } = idParams.parse(request.params);
+    const claimed = await claimMessageForSending(id, auth.user.id, auth.phoneNumber);
+    if (!claimed) {
+      return reply.status(409).send({
+        error: { message: 'Message not available for sending', code: 'CONFLICT' },
+      });
+    }
+    return { data: { claimed: true } };
   });
 
   app.post('/v1/messages/:id/events', { preHandler: authenticatePhone }, async (request) => {

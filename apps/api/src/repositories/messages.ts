@@ -162,6 +162,25 @@ export async function createInboundMessage(
   const contact = normalizePhoneNumber(input.from);
   const receivedAt = input.received_at ?? now;
 
+  const db = getMatuDb();
+  const { data: recent } = await db
+    .from('messages')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('owner', phoneNumber)
+    .eq('contact', contact)
+    .eq('content', input.content)
+    .eq('type', 'mobile-originated')
+    .order('received_at', { ascending: false })
+    .limit(1);
+  const existing = Array.isArray(recent) ? recent[0] : recent;
+  if (existing) {
+    const receivedMs = new Date(
+      (existing as Message).received_at ?? (existing as Message).created_at,
+    ).getTime();
+    if (Date.now() - receivedMs < 60_000) return existing as Message;
+  }
+
   const message = {
     id: uuid(),
     user_id: userId,
@@ -169,6 +188,8 @@ export async function createInboundMessage(
     contact,
     content: input.content,
     attachments: input.attachments ?? [],
+    encrypted: false,
+    type: 'mobile-originated' as const,
     status: 'received' as const,
     sim: 'DEFAULT',
     request_id: null,
@@ -193,6 +214,26 @@ export async function createInboundMessage(
 
   await upsertThread(userId, phoneNumber, contact, message.id, input.content);
   return message as Message;
+}
+
+export async function claimMessageForSending(
+  messageId: string,
+  userId: string,
+  phoneNumber: string,
+): Promise<boolean> {
+  const message = await findMessageById(messageId);
+  if (!message) return false;
+  if (message.user_id !== userId) return false;
+  if (message.owner !== phoneNumber) return false;
+  if (message.status !== 'pending' || !message.can_be_polled) return false;
+
+  await updateRow('messages', { id: messageId }, {
+    status: 'sending',
+    can_be_polled: false,
+    updated_at: nowIso(),
+    last_attempted_at: nowIso(),
+  });
+  return true;
 }
 
 export async function applyMessageEvent(
