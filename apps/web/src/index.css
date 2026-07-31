@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #2563eb;
+  --color-brand-dark: #1d4ed8;
+  --color-brand-light: #dbeafe;
+  --color-surface: #f8fafc;
+  --color-chat-in: #ffffff;
+  --color-chat-out: #2563eb;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+body {
+  @apply bg-surface text-slate-900 antialiased;
+}

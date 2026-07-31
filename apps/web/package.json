@@ -1,0 +1,36 @@
+{
+  "name": "@matusms/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@matusms/shared": "workspace:*",
+    "@tanstack/react-query": "^5.66.9",
+    "@tanstack/react-router": "^1.105.0",
+    "firebase": "^11.3.1",
+    "lucide-react": "^0.475.0",
+    "@marsidev/react-turnstile": "^1.1.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "socket.io-client": "^4.8.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.9",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0"
+  }
+}

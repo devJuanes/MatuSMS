@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+.turbo
+coverage/
+.vite
+*.tsbuildinfo
+.firebase/
+service-account.json
+google-services.json
+logs/

@@ -1,0 +1,17 @@
+{
+  "name": "matusms",
+  "private": true,
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @matusms/shared build && pnpm --filter @matusms/api dev",
+    "dev:web": "pnpm --filter @matusms/web dev",
+    "build": "pnpm -r build",
+    "build:prod": "pnpm --filter @matusms/shared build && pnpm --filter @matusms/api build && pnpm --filter @matusms/web build",
+    "start:api": "pnpm --filter @matusms/api start",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  }
+}
