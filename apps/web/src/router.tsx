@@ -21,6 +21,7 @@ import { WebhooksPage } from '@/pages/WebhooksPage';
 import { SchedulesPage } from '@/pages/SchedulesPage';
 import { BulkPage } from '@/pages/BulkPage';
 import { HeartbeatsPage } from '@/pages/HeartbeatsPage';
+import { DocsPage } from '@/pages/DocsPage';
 import { BillingPage } from '@/pages/BillingPage';
 import { SearchPage } from '@/pages/SearchPage';
 import type { ReactNode } from 'react';
@@ -172,6 +173,12 @@ const heartbeatsRoute = createRoute({
   component: HeartbeatsPage,
 });
 
+const docsRoute = createRoute({
+  getParentRoute: () => protectedLayout,
+  path: '/documentacion',
+  component: DocsPage,
+});
+
 const billingRoute = createRoute({
   getParentRoute: () => protectedLayout,
   path: '/billing',
@@ -209,6 +216,7 @@ const routeTree = rootRoute.addChildren([
     bulkRoute,
     heartbeatsRoute,
     billingRoute,
+    docsRoute,
     searchRoute,
   ]),
 ]);

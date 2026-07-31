@@ -75,7 +75,12 @@ export function SettingsPage() {
               API Key para la app Android
             </h2>
             <p className="mb-4 text-sm text-slate-500">
-              Usa esta clave en la app MatuSMS para vincular tu teléfono. También puedes escanear el código QR.
+              Usa esta clave en la app MatuSMS para vincular tu teléfono. Para integraciones SaaS
+              desde tu backend usa el mismo key con{' '}
+              <code className="rounded bg-slate-100 px-1">x-api-key</code>.{' '}
+              <Link to="/documentacion" className="text-brand hover:underline">
+                Ver documentación API
+              </Link>
             </p>
             <div className="rounded-xl bg-slate-50 p-4 font-mono text-sm break-all">{user.api_key}</div>
             <div className="mt-4 flex flex-wrap gap-3">

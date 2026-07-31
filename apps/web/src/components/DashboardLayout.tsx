@@ -10,11 +10,13 @@ import {
   Activity,
   CreditCard,
   LogOut,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const nav = [
   { to: '/mensajes', label: 'Mensajes', icon: MessageSquarePlus },
+  { to: '/documentacion', label: 'Documentación API', icon: BookOpen },
   { to: '/search', label: 'Buscar', icon: Search },
   { to: '/phones', label: 'Teléfonos', icon: Phone },
   { to: '/bulk', label: 'Envío masivo', icon: Upload },
