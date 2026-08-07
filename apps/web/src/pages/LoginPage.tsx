@@ -6,10 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTurnstile } from '@/hooks/useTurnstile';
 
 export function LoginPage() {
-  const { loginEmail, loginGoogle } = useAuth();
+  const { loginEmail } = useAuth();
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: '/login' });
-  const { siteKey, turnstileToken, setTurnstileToken, verifyTurnstile, requiresTurnstile } = useTurnstile();
+  const { siteKey, turnstileToken, setTurnstileToken, verifyTurnstile, requiresTurnstile } =
+    useTurnstile();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,38 +44,37 @@ export function LoginPage() {
     }
   }
 
-  async function handleGoogle() {
-    setError('');
-    try {
-      const ok = await verifyTurnstile();
-      if (!ok) {
-        setError('Completa la verificación de seguridad');
-        return;
-      }
-      await loginGoogle();
-      await afterAuth();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error con Google');
-    }
-  }
-
   return (
     <AuthShell
       title="Bienvenido de nuevo"
-      subtitle="Inicia sesión para acceder al panel MatuSMS"
+      subtitle="Accede al panel para gestionar gateways, mensajes y API keys."
       footer={
-        <p className="text-center text-sm text-slate-500">
-          ¿No tienes cuenta?{' '}
-          <Link to="/register" search={{ redirect: undefined }} className="font-semibold text-brand hover:underline">
-            Regístrate gratis
-          </Link>
-        </p>
+        <div className="space-y-4 text-center">
+          <p className="text-sm text-neutral-500">
+            ¿No tienes cuenta?{' '}
+            <Link
+              to="/register"
+              search={{ redirect: undefined }}
+              className="font-semibold text-brand hover:underline"
+            >
+              Regístrate gratis
+            </Link>
+          </p>
+          <p className="text-xs text-neutral-400">
+            <Link to="/legal" className="hover:text-brand hover:underline">
+              Términos y privacidad
+            </Link>
+          </p>
+        </div>
       }
     >
       <form onSubmit={handleEmail} className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-slate-600">Correo electrónico</label>
+          <label htmlFor="login-email" className="mb-1.5 block text-sm font-medium text-ink">
+            Correo electrónico
+          </label>
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -85,8 +85,11 @@ export function LoginPage() {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-slate-600">Contraseña</label>
+          <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-ink">
+            Contraseña
+          </label>
           <input
+            id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -97,7 +100,7 @@ export function LoginPage() {
           />
         </div>
 
-        {siteKey && (
+        {siteKey ? (
           <div className="flex justify-center pt-1">
             <Turnstile
               siteKey={siteKey}
@@ -106,34 +109,22 @@ export function LoginPage() {
               options={{ theme: 'light' }}
             />
           </div>
-        )}
+        ) : null}
 
-        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+        {error ? (
+          <p className="rounded-lg bg-brand-light px-3 py-2.5 text-sm text-brand" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <button
           type="submit"
           disabled={loading || (requiresTurnstile && !turnstileToken)}
-          className="auth-btn-primary"
+          className="auth-btn-primary mt-1"
         >
           {loading ? 'Entrando…' : 'Iniciar sesión'}
         </button>
       </form>
-
-      <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-xs text-slate-400">o</span>
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
-
-      <button type="button" onClick={handleGoogle} className="auth-btn-secondary">
-        Continuar con Google
-      </button>
-
-      <p className="mt-6 text-center text-xs text-slate-400">
-        <Link to="/legal" className="text-brand hover:underline">
-          Términos y privacidad
-        </Link>
-      </p>
     </AuthShell>
   );
 }

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Smartphone, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { CardListSkeleton } from '@/components/ui/Skeleton';
 import type { Phone } from '@matusms/shared';
 
 export function PhonesPage() {
@@ -28,7 +29,7 @@ export function PhonesPage() {
         desde el dashboard.
       </p>
 
-      {isLoading && <p className="text-slate-500">Cargando…</p>}
+      {isLoading && <CardListSkeleton rows={3} />}
 
       {!isLoading && !data?.length && (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">

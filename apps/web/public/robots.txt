@@ -1,0 +1,85 @@
+# https://matusms.matubyte.com/robots.txt
+User-agent: *
+Allow: /
+Allow: /legal
+Allow: /login
+Allow: /register
+Disallow: /mensajes
+Disallow: /documentacion
+Disallow: /search
+Disallow: /phones
+Disallow: /bulk
+Disallow: /schedules
+Disallow: /webhooks
+Disallow: /heartbeats
+Disallow: /billing
+Disallow: /settings
+Disallow: /phone-keys
+
+User-agent: Googlebot
+Allow: /
+Disallow: /mensajes
+Disallow: /documentacion
+Disallow: /search
+Disallow: /phones
+Disallow: /bulk
+Disallow: /schedules
+Disallow: /webhooks
+Disallow: /heartbeats
+Disallow: /billing
+Disallow: /settings
+Disallow: /phone-keys
+
+User-agent: Bingbot
+Allow: /
+Disallow: /mensajes
+Disallow: /documentacion
+Disallow: /search
+Disallow: /phones
+Disallow: /bulk
+Disallow: /schedules
+Disallow: /webhooks
+Disallow: /heartbeats
+Disallow: /billing
+Disallow: /settings
+Disallow: /phone-keys
+
+User-agent: Applebot
+Allow: /
+Disallow: /mensajes
+Disallow: /phones
+Disallow: /billing
+Disallow: /settings
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+Sitemap: https://matusms.matubyte.com/sitemap.xml
+Sitemap: https://matusms.matubyte.com/sitemap-index.xml

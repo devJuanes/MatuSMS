@@ -9,19 +9,17 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut,
   updateProfile,
   type User,
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
   loginEmail: (email: string, password: string) => Promise<void>;
   registerEmail: (email: string, password: string, displayName?: string) => Promise<void>;
-  loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
 };
@@ -50,9 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (displayName?.trim()) {
         await updateProfile(cred.user, { displayName: displayName.trim() });
       }
-    },
-    loginGoogle: async () => {
-      await signInWithPopup(auth, googleProvider);
     },
     logout: () => signOut(auth),
     getToken: async () => {

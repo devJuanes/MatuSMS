@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch, API_BASE } from '@/lib/api';
+import { Skeleton } from '@/components/ui/Skeleton';
 import type { User } from '@matusms/shared';
 
 function CodeBlock({ code, label }: { code: string; label?: string }) {
@@ -230,7 +231,10 @@ if (data.verified) {
           {user ? (
             <div className="rounded-xl bg-slate-50 p-4 font-mono text-sm break-all">{user.api_key}</div>
           ) : (
-            <p className="text-sm text-slate-500">Cargando…</p>
+            <div role="status" aria-label="Cargando API key">
+              <span className="sr-only">Cargando…</span>
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </div>
           )}
           <div className="mt-4 flex flex-wrap gap-3">
             {user && (
@@ -407,8 +411,8 @@ if (data.verified) {
 
         <p className="text-center text-sm text-slate-500">
           ¿Dudas?{' '}
-          <a href="mailto:support@matusms.com" className="text-brand hover:underline">
-            support@matusms.com
+          <a href="mailto:contacto@matubyte.com" className="text-brand hover:underline">
+            contacto@matubyte.com
           </a>
         </p>
       </div>

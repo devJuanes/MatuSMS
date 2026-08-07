@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "MatuSMS",
+			"path": "../.."
+		},
+		{
+			"name": "matusms",
+			"path": "../../../../dev/matusms"
+		},
+		{
+			"path": "../../../../Users/juanl/OneDrive/Documentos/GitHub/httpsms"
+		}
+	],
+	"settings": {}
+}

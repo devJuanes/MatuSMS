@@ -90,7 +90,7 @@ importers:
         specifier: ^1.105.0
         version: 1.170.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       firebase:
-        specifier: ^11.3.1
+        specifier: ^11.10.0
         version: 11.10.0
       lucide-react:
         specifier: ^0.475.0

@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import { Copy, KeyRound, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { CardListSkeleton } from '@/components/ui/Skeleton';
 import type { User } from '@matusms/shared';
 
 const E2E_STORAGE_KEY = 'matusms_e2e_key';
@@ -66,7 +67,7 @@ export function SettingsPage() {
   return (
     <div className="flex-1 overflow-auto p-6">
       <h1 className="mb-6 text-2xl font-bold">Configuración</h1>
-      {isLoading && <p className="text-slate-500">Cargando…</p>}
+      {isLoading && <CardListSkeleton rows={2} />}
       {user && (
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -180,8 +181,8 @@ export function SettingsPage() {
               Términos y privacidad
             </Link>
             {' · '}
-            <a href="mailto:support@matusms.com" className="text-brand">
-              support@matusms.com
+            <a href="mailto:contacto@matubyte.com" className="text-brand">
+              contacto@matubyte.com
             </a>
           </p>
         </div>

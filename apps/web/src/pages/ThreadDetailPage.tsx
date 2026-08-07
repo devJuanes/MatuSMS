@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { useState } from 'react';
 import { MessageStatusIcon } from '@/components/MessageStatusIcon';
+import { MessageListSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { encryptContent, getE2eKey, shouldEncryptByDefault } from '@/lib/e2e';
@@ -53,7 +54,7 @@ export function ThreadDetailPage() {
       </h1>
 
       <div className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        {isLoading && <p className="text-zinc-400">Cargando…</p>}
+        {isLoading && <MessageListSkeleton rows={4} />}
         {messages?.map((m) => {
           const outbound = m.type === 'mobile-terminated';
           return (

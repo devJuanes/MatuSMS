@@ -14,7 +14,7 @@
     "@matusms/shared": "workspace:*",
     "@tanstack/react-query": "^5.66.9",
     "@tanstack/react-router": "^1.105.0",
-    "firebase": "^11.3.1",
+    "firebase": "^11.10.0",
     "lucide-react": "^0.475.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",

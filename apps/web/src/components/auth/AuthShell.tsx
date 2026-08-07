@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { MessageSquare, Shield, Smartphone, Zap } from 'lucide-react';
+import { Check, MessageSquare, Shield, Smartphone } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 type AuthShellProps = {
@@ -9,70 +9,142 @@ type AuthShellProps = {
   footer: ReactNode;
 };
 
+const points = [
+  'Android gateway con QR en segundos',
+  'API REST + webhooks firmados HMAC',
+  'Panel en español · multi-SIM',
+];
+
 export function AuthShell({ title, subtitle, children, footer }: AuthShellProps) {
   return (
-    <div className="marketing-bg flex min-h-screen">
-      <div className="hidden w-1/2 flex-col justify-between border-r border-white/60 bg-white/40 p-10 backdrop-blur-sm lg:flex">
-        <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/25">
-            <MessageSquare className="h-5 w-5" />
+    <div className="flex min-h-screen bg-neutral-50">
+      {/* Brand panel */}
+      <aside className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-ink p-10 text-white xl:w-[48%] lg:flex">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(ellipse 70% 50% at 80% 0%, rgba(255,255,255,0.06) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 10% 100%, rgba(255,255,255,0.03) 0%, transparent 50%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        <Link
+          to="/"
+          className="matu-fade-up relative z-10 flex items-center gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        >
+          <img
+            src="/favicon.png"
+            alt=""
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-lg object-contain"
+          />
+          <span className="text-xl font-extrabold tracking-tight">
+            Matu<span className="text-brand">SMS</span>
           </span>
-          MatuSMS
         </Link>
 
-        <div className="space-y-8">
-          <div>
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-light px-3 py-1 text-xs font-semibold text-brand">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-              Pasarela SMS profesional
-            </p>
-            <h1 className="text-4xl font-bold leading-tight tracking-tight text-slate-900">
-              Controla cada mensaje desde un solo panel
+        <div className="relative z-10 space-y-10">
+          <div className="matu-fade-up-delay">
+            <h1 className="max-w-md text-3xl font-extrabold leading-[1.15] tracking-tight xl:text-[2.5rem]">
+              Pasarela SMS profesional para tu Android
             </h1>
-            <p className="mt-4 max-w-md text-slate-600">
-              Convierte tu Android en gateway SMS. Envía, recibe y automatiza con API, webhooks y
-              multi-SIM.
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-neutral-400">
+              Envía, recibe y automatiza con tu propia SIM — API, cola y eventos firmados.
             </p>
           </div>
 
-          <div className="space-y-4">
-            {[
-              { icon: Smartphone, text: 'Registra teléfonos desde la app Android' },
-              { icon: Zap, text: 'Mensajes en tiempo real con FCM y cola offline' },
-              { icon: Shield, text: 'API keys, webhooks firmados y panel seguro' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-light text-brand">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm text-slate-700">{text}</span>
+          {/* Product snapshot */}
+          <div className="matu-fade-up-delay-2 overflow-hidden rounded-2xl border border-white/10 bg-ink-panel/80 shadow-2xl shadow-black/40 backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-brand" />
+                <span className="text-xs font-medium text-white/80">Gateway online</span>
               </div>
-            ))}
+              <span className="font-mono text-[10px] text-white/40">SIM 1 · Bogotá</span>
+            </div>
+            <div className="space-y-2 p-4">
+              <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare className="h-4 w-4 text-brand" />
+                  <div>
+                    <p className="text-xs font-medium text-white/90">OTP enviado</p>
+                    <p className="text-[11px] text-white/40">+57 300… · 0.8s</p>
+                  </div>
+                </div>
+                <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-400">
+                  delivered
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <Smartphone className="h-4 w-4 text-neutral-400" />
+                  <div>
+                    <p className="text-xs font-medium text-white/90">Inbound recibido</p>
+                    <p className="text-[11px] text-white/40">Hilo abierto en el panel</p>
+                  </div>
+                </div>
+                <span className="rounded bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-sky-300">
+                  live
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 py-2.5">
+                <Shield className="h-4 w-4 text-neutral-400" />
+                <p className="text-xs text-white/70">Webhook HMAC · event delivered</p>
+              </div>
+            </div>
           </div>
+
+          <ul className="matu-fade-up-delay-2 space-y-2.5">
+            {points.map((text) => (
+              <li key={text} className="flex items-center gap-2.5 text-sm text-neutral-300">
+                <Check className="h-4 w-4 shrink-0 text-brand" strokeWidth={2.5} />
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <p className="text-xs text-slate-500">© {new Date().getFullYear()} MatuStudio · MatuDB ecosystem</p>
-      </div>
+        <p className="relative z-10 text-xs text-neutral-500">
+          © {new Date().getFullYear()} MatuByte S.A.S. · Ecosistema MatuDB
+        </p>
+      </aside>
 
-      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-8">
-        <div className="mx-auto w-full max-w-md">
+      {/* Form panel */}
+      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-8 lg:px-12">
+        <div className="mx-auto w-full max-w-[400px]">
           <div className="mb-8 lg:hidden">
-            <Link to="/" className="mb-6 inline-flex items-center gap-2 font-semibold text-slate-900">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white">
-                <MessageSquare className="h-5 w-5" />
+            <Link to="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-ink">
+              <img
+                src="/favicon.png"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 rounded-lg object-contain"
+              />
+              <span>
+                Matu<span className="text-brand">SMS</span>
               </span>
-              MatuSMS
             </Link>
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/80 bg-white/85 p-8 shadow-[0_24px_60px_-20px_rgba(59,111,245,0.18)] backdrop-blur-md">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
-              <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-            </div>
-            {children}
-            <div className="mt-6">{footer}</div>
+          <div className="matu-fade-up mb-8">
+            <h2 className="text-2xl font-extrabold tracking-tight text-ink sm:text-[1.75rem]">
+              {title}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-500">{subtitle}</p>
           </div>
+
+          <div className="matu-fade-up-delay">{children}</div>
+          <div className="matu-fade-up-delay-2 mt-8">{footer}</div>
         </div>
       </div>
     </div>

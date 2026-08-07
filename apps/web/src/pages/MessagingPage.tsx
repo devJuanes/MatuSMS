@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, Plus, Search, Send, X } from 'lucide-react';
 import { MessageStatusIcon } from '@/components/MessageStatusIcon';
 import { PhoneInput, toE164 } from '@/components/PhoneInput';
+import { MessageListSkeleton, ThreadListSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { defaultCountry, formatTime, initials, type Country } from '@/lib/countries';
@@ -206,7 +207,7 @@ export function MessagingPage() {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          {loadingThreads && <p className="p-6 text-slate-500">Cargando…</p>}
+          {loadingThreads && <ThreadListSkeleton />}
           {!loadingThreads && !filtered?.length && (
             <div className="flex flex-col items-center gap-3 p-12 text-center text-slate-500">
               <MessageCircle size={48} className="text-brand/40" />
@@ -288,7 +289,7 @@ export function MessagingPage() {
             </header>
 
             <div className="flex-1 space-y-3 overflow-y-auto p-6">
-              {loadingMessages && <p className="text-slate-500">Cargando mensajes…</p>}
+              {loadingMessages && <MessageListSkeleton />}
               {messages?.map((m) => {
                 const outbound = m.type === 'mobile-terminated';
                 return (

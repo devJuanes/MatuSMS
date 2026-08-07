@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0A0A0A"/>
+  <circle cx="980" cy="120" r="280" fill="#F22F46" fill-opacity="0.22"/>
+  <text x="80" y="250" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="72" font-weight="800">MatuSMS</text>
+  <text x="80" y="340" fill="#F22F46" font-family="Arial, sans-serif" font-size="40" font-weight="700">Pasarela SMS · Android Gateway</text>
+  <text x="80" y="410" fill="#A3A3A3" font-family="Arial, sans-serif" font-size="28">API REST · Webhooks HMAC · Dual SIM · Panel en español</text>
+</svg>

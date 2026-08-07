@@ -12,6 +12,7 @@ import {
   LogOut,
   BookOpen,
 } from 'lucide-react';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const nav = [
@@ -30,13 +31,32 @@ const nav = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
 
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="robots"]');
+    const previous = meta?.getAttribute('content') ?? null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'robots');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', 'noindex, nofollow');
+    return () => {
+      if (previous != null) meta?.setAttribute('content', previous);
+      else meta?.setAttribute('content', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-surface">
       <aside className="flex w-64 flex-col border-r border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand font-bold text-white shadow-md shadow-brand/30">
-            M
-          </div>
+          <img
+            src="/favicon.png"
+            alt=""
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-xl object-contain"
+          />
           <div>
             <p className="font-semibold text-slate-900">MatuSMS</p>
             <p className="text-xs text-slate-500">Mensajería SMS</p>

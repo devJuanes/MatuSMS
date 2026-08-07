@@ -1,73 +1,216 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #3b6ff5;
-  --color-brand-dark: #2b5ce6;
-  --color-brand-light: #e8f0ff;
-  --color-peach: #fde8d8;
-  --color-peach-soft: #fff4ed;
-  --color-sky: #dceeff;
-  --color-surface: #f8fafc;
+  --color-brand: #f22f46;
+  --color-brand-dark: #d91e36;
+  --color-brand-light: #fff1f2;
+  --color-ink: #111111;
+  --color-ink-deep: #0a0a0a;
+  --color-ink-muted: #1a1a1a;
+  --color-ink-panel: #161616;
+  --color-surface: #ffffff;
   --color-chat-in: #ffffff;
-  --color-chat-out: #3b6ff5;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --color-chat-out: #f22f46;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 body {
-  @apply bg-surface text-slate-900 antialiased;
+  @apply bg-surface text-ink antialiased;
   font-family: var(--font-sans);
 }
 
-/* Fondo landing — azul arriba-derecha, melocotón abajo-izquierda */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
 .marketing-bg {
-  background-color: #f6f8fc;
-  background-image:
-    radial-gradient(ellipse 90% 70% at 85% 5%, rgba(147, 197, 253, 0.55) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 60% at 10% 95%, rgba(253, 186, 140, 0.45) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 40%, rgba(255, 255, 255, 0.9) 0%, transparent 70%),
-    linear-gradient(160deg, #eef4ff 0%, #fafbfd 45%, #fff8f3 100%);
-}
-
-.marketing-glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.marketing-card {
-  @apply rounded-[1.75rem] border border-white/80 bg-white/75 shadow-[0_20px_60px_-20px_rgba(59,111,245,0.15)] backdrop-blur-sm;
-}
-
-.marketing-card-dashed {
-  @apply rounded-[1.75rem] border border-dashed border-slate-200/90 bg-white/60 backdrop-blur-sm;
-}
-
-.marketing-hero-box {
-  @apply rounded-[2rem] border border-dashed border-slate-200/80 bg-white/50 px-6 py-12 backdrop-blur-md sm:px-10 sm:py-16;
-  box-shadow: 0 32px 80px -24px rgba(59, 111, 245, 0.12);
-}
-
-.marketing-float {
-  animation: marketing-float 6s ease-in-out infinite;
-}
-
-.marketing-float-delay {
-  animation: marketing-float 6s ease-in-out 2s infinite;
-}
-
-@keyframes marketing-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  background-color: #ffffff;
+  overflow-x: clip;
 }
 
 .auth-input {
-  @apply w-full rounded-2xl border border-slate-200/90 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20;
+  @apply w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/20;
 }
 
 .auth-btn-primary {
-  @apply w-full rounded-full bg-brand py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+  @apply w-full rounded-lg bg-brand py-3.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .auth-btn-secondary {
-  @apply w-full rounded-full border border-slate-200/80 bg-white/80 py-3.5 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-white;
+  @apply w-full rounded-lg border border-neutral-200 bg-white py-3.5 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-50;
+}
+
+@keyframes matu-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes matu-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes matu-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(7.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes matu-float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes matu-typing {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.matu-fade-up {
+  animation: matu-fade-up 0.6s ease-out both;
+}
+
+.matu-fade-up-delay {
+  animation: matu-fade-up 0.6s ease-out 0.1s both;
+}
+
+.matu-fade-up-delay-2 {
+  animation: matu-fade-up 0.6s ease-out 0.2s both;
+}
+
+.matu-pulse-dot {
+  animation: matu-pulse-dot 1.8s ease-in-out infinite;
+}
+
+.matu-scan-line {
+  animation: matu-scan 2.4s ease-in-out infinite;
+}
+
+.matu-float-soft {
+  animation: matu-float-soft 4s ease-in-out infinite;
+}
+
+.matu-typing-dot {
+  animation: matu-typing 1.2s ease-in-out infinite;
+}
+
+.matu-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.matu-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.matu-visual-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1rem;
+  min-height: 220px;
+  background-color: #0a0a0a;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 640px) {
+  .matu-visual-stage {
+    min-height: 260px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .matu-visual-stage {
+    height: 100%;
+    min-height: 320px;
+  }
+}
+
+.matu-visual-stage__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+}
+
+.matu-visual-stage__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, rgba(10, 10, 10, 0.55) 0%, rgba(10, 10, 10, 0.88) 55%, #0a0a0a 100%),
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+
+.matu-visual-stage__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.matu-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e8eef5 40%,
+    #f8fafc 50%,
+    #e8eef5 60%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  animation: matu-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes matu-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matu-skeleton {
+    animation: none;
+    background: #f1f5f9;
+  }
 }
